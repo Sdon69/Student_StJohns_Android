@@ -1,0 +1,59 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        config {
+            keyAlias 'StjKey0'
+            keyPassword 'bombaydyeing'
+            storeFile file('C:/Users/suyas/stjAppKeys/StJohns.jks')
+            storePassword 'bombaydyeing'
+        }
+    }
+    compileSdkVersion 25
+    buildToolsVersion "26.0.1"
+    defaultConfig {
+        applicationId "com.theironfoundry8890.stjohns"
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 8
+        versionName '1.8'
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
+            signingConfig signingConfigs.config
+        }
+        debug {
+            signingConfig signingConfigs.config
+        }
+    }
+    productFlavors {
+    }
+}
+
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'commons-lang:commons-lang:2.6'
+    compile('com.google.api-client:google-api-client-android:1.22.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    compile('com.google.apis:google-api-services-sheets:v4-rev483-1.22.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.google.zxing:core:3.2.1'
+    compile 'com.journeyapps:zxing-android-embedded:3.2.0@aar'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
+    compile 'pub.devrel:easypermissions:0.3.0'
+    compile 'com.android.support:design:25.3.1'
+    compile 'me.dm7.barcodescanner:zxing:1.8.4'
+    compile 'com.android.support:support-v4:25.3.1'
+    testCompile 'junit:junit:4.12'
+}

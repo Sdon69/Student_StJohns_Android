@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/mLayout">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none"
+        android:background="@drawable/signup_background"><!-- Put height to wrap content in case of any problem -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="106dp"
+                android:background="@drawable/bg23">
+
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:padding="8dp"
+                    android:src="@drawable/event_circle"
+
+                    />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_weight="8"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Sign Up!"
+                    android:textColor="#4489c8"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/Student_FName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="First Name"
+                    android:maxLength="12"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    />
+
+                <EditText
+                    android:id="@+id/Student_LName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Last Name"
+                    android:maxLength="12"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"/>
+
+                <EditText
+                    android:id="@+id/User_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="User id"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:maxLength="20"/>
+
+                <EditText
+                    android:id="@+id/pass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:maxLength="20"/>
+
+                <EditText
+                    android:id="@+id/cpass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Confirm Password"
+                    android:inputType="textPassword"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:maxLength="20"/>
+
+                <Spinner
+                    android:id="@+id/spinner_semesters"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:entries="@array/semester_arrays2"
+                    android:prompt="@string/section_prompt"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="4dp"/>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+                <Spinner
+                    android:id="@+id/spinner_department"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:entries="@array/dept_arrays2"
+                    android:prompt="@string/section_prompt"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="4dp"/>
+    <Button
+        android:id="@+id/reselect_dept"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_alignParentRight="true"
+        android:text="Reselect Department"
+        android:textAllCaps="false"
+        android:background="@drawable/round_button"
+        android:textColor="#ffffff"
+        android:padding="8dp"
+        android:clickable="false"
+        android:enabled="false"
+        android:visibility="invisible"
+        android:onClick="onClickReselectDepartment"/>
+</RelativeLayout>
+
+                <Spinner
+                    android:id="@+id/spinner_class"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:entries="@array/class_title"
+                    android:prompt="@string/country_prompt"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="4dp"/>
+
+                <Spinner
+                    android:id="@+id/spinner_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:entries="@array/section_title"
+                    android:prompt="@string/section_prompt"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:layout_marginLeft="4dp"/>
+
+                <EditText
+                    android:id="@+id/email_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Email Address"
+                    android:inputType="textEmailAddress"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"
+                    android:maxLength="100"/>
+
+                <EditText
+                    android:id="@+id/Phone_no"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Phone No"
+                    android:inputType="phone"
+                    android:textColorHint="#6a69696b"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:text="Already a member? Sign in "
+                    android:onClick="onClickSignin"
+                    android:textColor="#285d8e"
+                    android:layout_marginTop="16dp"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:onClick="submitInfo"
+                    android:text="SUBMIT"
+                    android:textAllCaps="true"
+                    android:background="@drawable/round_button"
+                    android:textColor="#f8fcff"
+                    android:layout_gravity="center_horizontal"/>
+
+
+            </LinearLayout>
+
+
+        </LinearLayout></ScrollView></LinearLayout>
