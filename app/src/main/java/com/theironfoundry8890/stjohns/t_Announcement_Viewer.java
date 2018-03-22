@@ -774,7 +774,7 @@ public class t_Announcement_Viewer extends Activity
 
     public void onClickAnnouncement(View v)
     {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Viewer.class);
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,Newsfeed.class);
         startActivity(selectIntent);
 
 

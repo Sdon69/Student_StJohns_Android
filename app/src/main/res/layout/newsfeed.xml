@@ -2,7 +2,6 @@
 
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -11,7 +10,88 @@
     android:padding="0dp"
     android:layout_margin="0dp"
     >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:background="#ffffff"
+        android:paddingBottom="4dp"
+        android:orientation="horizontal"
+        >
 
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1.2"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="16dp">
+
+
+            <TextView
+                android:id="@+id/newsFeedTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="News Feed"
+
+                android:textStyle="bold"
+                android:textSize="16dp"
+
+
+                />
+            <View
+                android:layout_width="60dp"
+                android:layout_height="6dp"
+                android:layout_marginTop="3dp"
+                android:background="@color/colorPrimary" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.25"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:onClick="onClickTimetable"
+            >
+
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+
+                android:layout_margin="4dp"
+                android:src="@drawable/timetable_logo" />
+
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.25"
+            android:orientation="vertical"
+            android:paddingTop="10dp"
+            android:onClick="onClickProfile"
+            >
+
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:src="@drawable/profile" />
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+    <include
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/timetable"
+        android:visibility="visible"/>
 
 
 
@@ -27,8 +107,7 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp">
 
-            <ListView xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
+            <ListView
                 android:id="@+id/list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -43,19 +122,7 @@
 
         </LinearLayout>
 
-      <!--  <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/navbar"
-            android:layout_alignParentRight="true"
-            android:layout_margin="20dp"
 
-            android:background="@drawable/empty"
-            android:onClick="onClickPlus"
-            android:src="@drawable/plusfloat"
-
-            app:fabSize="normal" /> -->
 
         <LinearLayout
             android:id="@+id/navbar"

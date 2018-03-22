@@ -5,19 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"><RelativeLayout
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+ >
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="none"
         android:layout_above="@+id/navbar"
 
+
+
         >
 
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+
+           >
             <ImageView
                 android:layout_width="106dp"
                 android:layout_height="56dp"
@@ -25,22 +31,22 @@
                 android:layout_gravity="center_horizontal"
                 />
 
-            <!--<TextView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:textSize="14sp"-->
-                <!--android:id="@+id/School"-->
-                <!--android:layout_gravity="center_horizontal"-->
-                <!--android:textAlignment="center"-->
-                <!--android:text="St Johns"-->
-                <!--android:padding="0dp"-->
-                <!--android:textColor="#2b8de4"-->
-                <!--android:textStyle="bold"-->
-                <!--/>-->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="26sp"
+                android:textSize="14sp"
+                android:id="@+id/School"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:text="St Johns"
+                android:padding="0dp"
+                android:textColor="#2b8de4"
+                android:textStyle="bold"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
                 android:id="@+id/detailedlaytitle"
                 android:layout_gravity="center_horizontal"
                 android:textAlignment="center"
@@ -48,6 +54,7 @@
                 android:textStyle="bold"
                 android:padding="8dp"
                 android:textColor="#555555"
+
                 />
 
             <TextView

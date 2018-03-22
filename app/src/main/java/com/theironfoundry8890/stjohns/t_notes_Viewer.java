@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -49,6 +50,8 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
+import static android.R.attr.value;
+import static com.theironfoundry8890.stjohns.R.id.department_layout;
 import static com.theironfoundry8890.stjohns.R.id.pass;
 
 public class t_notes_Viewer extends Activity
@@ -157,6 +160,35 @@ public class t_notes_Viewer extends Activity
         mProgress.setCanceledOnTouchOutside(false);
         setContentView(activityLayout);
 
+//        Spinner departmentSpinner;
+//        ArrayAdapter<String> yourAdapter;
+//
+//        departmentSpinner = (Spinner) findViewById(R.id.spinner_dept);
+//        ArrayList<String> array = new ArrayList<String>();
+//        array.add("All Departments");
+//        array.add("Art");
+//        array.add("Commerce");
+//        array.add("Management");
+//        array.add("Education");
+//        array.add("Science");
+//        array.add("Other Subjects");
+//
+//        yourAdapter= new ArrayAdapter<String>(this, R.layout.spinner_item, array);
+//        departmentSpinner.setAdapter(yourAdapter);
+//        ArrayList<String> semesterArray = new ArrayList<String>();
+//
+//        semesterArray.add("All Semesters");
+//        semesterArray.add("First Semester");
+//        semesterArray.add("Second Semester");
+//        semesterArray.add("Third Semester");
+//        semesterArray.add("Fourth Semester");
+//        semesterArray.add("Fifth Semester");
+//        semesterArray.add("Sixth and Above Semesters");
+//
+//
+//        yourAdapter= new ArrayAdapter<String>(this, R.layout.spinner_item, semesterArray);
+//        Spinner semesterSpinner = (Spinner) findViewById(R.id.spinner_semesters);
+//        semesterSpinner.setAdapter(yourAdapter);
         colorCheck();
 
         // Initialize credentials and service object.
