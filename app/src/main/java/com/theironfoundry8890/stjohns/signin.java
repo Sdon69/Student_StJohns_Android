@@ -134,7 +134,7 @@ public class signin extends Activity
         loadData();
         if(!sVirginity)
         {
-            Intent selectIntent = new Intent(signin.this,dStudentProfile.class);
+            Intent selectIntent = new Intent(signin.this,Newsfeed.class);
             startActivity(selectIntent);
         }
 
@@ -707,7 +707,7 @@ public class signin extends Activity
 
 
 
-        Intent selectIntent = new Intent(signin.this,dStudentProfile.class);
+        Intent selectIntent = new Intent(signin.this,Newsfeed.class);
         startActivity(selectIntent);
     }
 

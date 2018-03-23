@@ -18,12 +18,14 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +64,9 @@ public class Newsfeed extends Activity
     private String sSemester;
     private String sDepartment;
     private String globalTransferArray[];
+    private boolean timetableVisible = true;
+    private boolean appFirstUse;
+    private String globalDataArrayString;
 
 
 
@@ -70,7 +75,7 @@ public class Newsfeed extends Activity
     private boolean idAvailcheck = true;
     private String mode = "announcementViewer" ;
 
-    private int a = 1;
+    private int a = 4;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
 
@@ -87,7 +92,7 @@ public class Newsfeed extends Activity
     private String lastDateofRegistration;
     private String fees;
     final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
-    final ArrayList<newsfeedContainer> containers = new ArrayList<newsfeedContainer>();
+    final ArrayList<newsfeedPublic> containers = new ArrayList<newsfeedPublic>();
 
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
@@ -110,8 +115,9 @@ public class Newsfeed extends Activity
     private String gSavedAnnSheetId;
     private String savedPass;
     private String savedId;
+    private String adapterMode;
 
-
+    private String globalDepartment;
 
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
@@ -131,61 +137,86 @@ public class Newsfeed extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.newsfeed);
+        loadUse();
+
+        if(appFirstUse)
+        {
+
+            Intent selectIntent = new Intent(Newsfeed.this,signin.class);
+            startActivity(selectIntent);
+        }else {
+
+            setContentView(R.layout.newsfeed);
 
 
+            LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            activityLayout.setLayoutParams(lp);
+            activityLayout.setOrientation(LinearLayout.VERTICAL);
 
 
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT);
-        activityLayout.setLayoutParams(lp);
-        activityLayout.setOrientation(LinearLayout.VERTICAL);
+            ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
 
 
-        ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
+            mOutputText = new TextView(this);
+            mOutputText.setLayoutParams(tlp);
+            mOutputText.setPadding(16, 16, 16, 16);
+            mOutputText.setVerticalScrollBarEnabled(true);
+            mOutputText.setMovementMethod(new ScrollingMovementMethod());
+            mOutputText.setText(
+                    " ");
+            activityLayout.addView(mOutputText);
+
+            mProgress = new ProgressDialog(this);
+            mProgress.setMessage("Loading ...");
+            mProgress.setCanceledOnTouchOutside(false);
+
+            setContentView(activityLayout);
+
+            colorCheck();
+            // Initialize credentials and service object.
+            mCredential = GoogleAccountCredential.usingOAuth2(
+                    getApplicationContext(), Arrays.asList(SCOPES))
+                    .setBackOff(new ExponentialBackOff());
+            loadData();
+
+            if(globalDepartment.equals("unknown")) {
+                RelativeLayout whatDepartment = (RelativeLayout) findViewById(R.id.whatDepartment);
+                whatDepartment.setVisibility(View.VISIBLE);
+            }else
+
+            {
+
+                loadDataArray();
+                if(!globalDataArrayString.equals("unknown"))
+                {
+                    sortDataByDate(globalDataArrayString);
+                    EventList();
+                }
+
+                dept_filter = sDepartment;
+
+                semester_filter = sSemester;
+
+                Date now = new Date();
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(now);
 
 
-        mOutputText = new TextView(this);
-        mOutputText.setLayoutParams(tlp);
-        mOutputText.setPadding(16, 16, 16, 16);
-        mOutputText.setVerticalScrollBarEnabled(true);
-        mOutputText.setMovementMethod(new ScrollingMovementMethod());
-        mOutputText.setText(
-                " ");
-        activityLayout.addView(mOutputText);
+                dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
 
-        mProgress = new ProgressDialog(this);
-        mProgress.setMessage("Loading ...");
-        mProgress.setCanceledOnTouchOutside(false);
-
-        setContentView(activityLayout);
-
-        colorCheck();
-        // Initialize credentials and service object.
-        mCredential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
-        loadData();
-
-        dept_filter = sDepartment;
-
-        semester_filter = sSemester;
-
-        Date now = new Date();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(now);
+                timetableDataConversion(dayIndex);
 
 
-         dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+                getResultsFromApi();
 
-        timetableDataConversion(dayIndex);
-
-        getResultsFromApi();
+            }
+        }
 
     }
 
@@ -359,7 +390,7 @@ public class Newsfeed extends Activity
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(this);
-        Log.v("t_Announcement_Viewer" , "Success");
+
         return connectionStatusCode == ConnectionResult.SUCCESS;
 
     }
@@ -463,11 +494,6 @@ public class Newsfeed extends Activity
                 spreadsheetId = "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw";
                 range = "Events!".concat("A"+ 2 + ":S");
             }
-//            else if(mode.equals("timeTable"))
-//            {
-//
-//
-//            }
 
 
 
@@ -511,7 +537,7 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
-                                words.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                containers.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
                                         , fileAttachment,"ANNOUNCEMENTS"));
                             }
                         }
@@ -544,7 +570,7 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
-                                words.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
+                                containers.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
                                         ,fileAttachment, "NOTES"));
                             }
                         }
@@ -582,7 +608,7 @@ public class Newsfeed extends Activity
 
 
 
-                                words.add(new newsfeedPublic(description, title, publishDate, eventDate,
+        containers.add(new newsfeedPublic(description, title, publishDate, eventDate,
                                         lastDateofRegistration, fees, fullName,"EVENTS"));
 
                         }
@@ -600,7 +626,7 @@ public class Newsfeed extends Activity
         @Override
         protected void onPreExecute() {
             mOutputText.setText("");
-            mProgress.show();
+//            mProgress.show();
 
 
 
@@ -633,150 +659,13 @@ public class Newsfeed extends Activity
                 {
 
 
-                    String dateRetrieved = words.toString();
-                    Log.v("trimmedString", dateRetrieved);
-                    String trimmedString = dateRetrieved.replace("[","");
-                    trimmedString = trimmedString.replace("]","");
-                    Log.v("trimmedString", trimmedString);
-                    trimmedString = trimmedString.replace(" NOTES","NOTES");
-                    trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
-                    trimmedString = trimmedString.replace(" EVENTS","EVENTS");
-                    Log.v("trimmedString", trimmedString);
+                    String dateRetrieved = containers.toString();
+                    sortDataByDate(dateRetrieved);
 
-
-                    String dateArray[] = trimmedString.split(",");
-                    String elementArray[];
-                    String elementMode;
-
-
-
-                    int i;
-
-                    int latestIndex = 0;
-                    String championDate = "date";
-                    String descendingDates = "default";
-                    String transferArray[] = {"hello","hello"};
-                    String appendedChampionDate = ".";
-                    Log.v("dateArray.length", String.valueOf(dateArray.length));
-                    words.clear();
-                    for(i=0;i<dateArray.length;i++) {
-
-                        String latestDate;
-//
-                        elementArray = dateArray[i].split("%");
-                        elementMode = elementArray[0];
-
-                        Log.v("elementArray[0]", elementArray[0]);
-
-                        if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
-                            latestDate = elementArray[7];
-
-                        } else if (elementMode.contains("EVENTS")) {
-                            latestDate = elementArray[3];
-                        } else {
-                            break;
-                        }
-//
-
-
-                        int k = i;
-
-                        for (k = k; k < dateArray.length; k++) {
-
-                            String latestDataArray[] = latestDate.split("/");
-
-                            int latestDateDay = Integer.parseInt(latestDataArray[0]);
-                            int latestDateMonth = Integer.parseInt(latestDataArray[1]);
-                            int latestDateYear = Integer.parseInt(latestDataArray[2]);
-
-
-                            elementArray = dateArray[k].split("%");
-                            elementMode = elementArray[0];
-                            String challengeDate = "o";
-                            if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
-                                challengeDate = elementArray[7];
-
-                            } else if (elementMode.equals("EVENTS")) {
-                                challengeDate = elementArray[3];
-                            } else {
-                                break;
-                            }
-
-                            String challengeDateArray[] = challengeDate.split("/");
-                            Log.v("k", String.valueOf(k));
-                            Log.v("latestDate", latestDate);
-                            Log.v("challengeDate", challengeDate);
-//                            Log.v("challengeDateArray", String.valueOf(challengeDate));
-                            int challengeDateDay = Integer.parseInt(challengeDateArray[0]);
-                            int challengeDateMonth = Integer.parseInt(challengeDateArray[1]);
-                            int challengeDateYear = Integer.parseInt(challengeDateArray[2]);
-
-                            boolean lastestDayIsPast = false;
-
-                            if (latestDateYear < challengeDateYear) {
-                                lastestDayIsPast = true;
-                            } else if (latestDateMonth < challengeDateMonth) {
-                                if (latestDateYear <= challengeDateYear) {
-                                    lastestDayIsPast = true;
-                                }
-                            } else if (latestDateDay < challengeDateDay) {
-                                if (latestDateMonth <= challengeDateMonth) {
-                                    if (latestDateYear <= challengeDateYear) {
-                                        lastestDayIsPast = true;
-
-                                    }
-                                }
-                            }
-//                            Log.v("lastestDayIsPast", String.valueOf(lastestDayIsPast));
-                            if (lastestDayIsPast) {
-                                championDate = challengeDate;
-                                latestDate = challengeDate;
-                                latestIndex = k;
-
-                            }
-
-                            lastestDayIsPast = false;
-
-
-                        }
-                        appendedChampionDate = appendedChampionDate + "  - \n " + latestDate;
-
-
-                        transferArray[0] = dateArray[i];
-                        dateArray[i] = dateArray[latestIndex];
-
-                        dateArray[latestIndex] = transferArray[0];
-
-                        Log.v("championDate", latestDate + latestIndex);
-
-
-                        elementArray = dateArray[i].split("%");
-                        Log.d("array", Arrays.toString(elementArray));
-                        elementMode = elementArray[0];
-
-
-                        if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
-                            words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                                    elementArray[5], elementArray[6], elementArray[7]
-                                    , elementArray[8], elementArray[0]));
-                        } else {
-                            words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                                    elementArray[5], elementArray[6], elementArray[7]
-                                    , elementArray[0]));
-                        }
-
-
-                    }
-
-
-
-
-
-
-                    Log.v("appendedchampionDate",appendedChampionDate);
 
                     mProgress.hide();
                     EventList();
+
 
                 }
 
@@ -798,169 +687,13 @@ public class Newsfeed extends Activity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             Newsfeed.REQUEST_AUTHORIZATION);
                 } else {
+                    String dateRetrieved = containers.toString();
+                    sortDataByDate(dateRetrieved);
 
 
-                    end = true;
+                    mProgress.hide();
+                    EventList();
 
-                    if(mode.equals("announcementViewer")) {
-                        mode = "notesViewer";
-
-                        getResultsFromApi();
-                    }
-                    else if(mode.equals("notesViewer")) {
-                        mode = "eventViewer";
-
-                        getResultsFromApi();
-                    }  else if(mode.equals("eventViewer"))
-                    {
-
-
-                        String dateRetrieved = words.toString();
-                        Log.v("trimmedString", dateRetrieved);
-                        String trimmedString = dateRetrieved.replace("[","");
-                        trimmedString = trimmedString.replace("]","");
-                        Log.v("trimmedString", trimmedString);
-                        trimmedString = trimmedString.replace(" NOTES","NOTES");
-                        trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
-                        trimmedString = trimmedString.replace(" EVENTS","EVENTS");
-                        Log.v("trimmedString", trimmedString);
-
-
-                        String dateArray[] = trimmedString.split(",");
-                        String elementArray[];
-                        String elementMode;
-
-
-
-                        int i;
-
-                        int latestIndex = 0;
-                        String championDate = "date";
-                        String descendingDates = "default";
-                        String transferArray[] = {"hello","hello"};
-                        String appendedChampionDate = ".";
-                        Log.v("dateArray.length", String.valueOf(dateArray.length));
-                        words.clear();
-                        for(i=0;i<dateArray.length;i++) {
-
-                            String latestDate;
-//
-                            elementArray = dateArray[i].split("%");
-                            elementMode = elementArray[0];
-
-                            Log.v("elementArray[0]", elementArray[0]);
-
-                            if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
-                                latestDate = elementArray[7];
-
-                            } else if (elementMode.contains("EVENTS")) {
-                                latestDate = elementArray[3];
-                            } else {
-                                break;
-                            }
-//
-
-
-                            int k = i;
-
-                            for (k = k; k < dateArray.length; k++) {
-
-                                String latestDataArray[] = latestDate.split("/");
-
-                                int latestDateDay = Integer.parseInt(latestDataArray[0]);
-                                int latestDateMonth = Integer.parseInt(latestDataArray[1]);
-                                int latestDateYear = Integer.parseInt(latestDataArray[2]);
-
-
-                                elementArray = dateArray[k].split("%");
-                                elementMode = elementArray[0];
-                                String challengeDate = "o";
-                                if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
-                                    challengeDate = elementArray[7];
-
-                                } else if (elementMode.equals("EVENTS")) {
-                                    challengeDate = elementArray[3];
-                                } else {
-                                    break;
-                                }
-
-                                String challengeDateArray[] = challengeDate.split("/");
-                                Log.v("k", String.valueOf(k));
-                                Log.v("latestDate", latestDate);
-                                Log.v("challengeDate", challengeDate);
-//                            Log.v("challengeDateArray", String.valueOf(challengeDate));
-                                int challengeDateDay = Integer.parseInt(challengeDateArray[0]);
-                                int challengeDateMonth = Integer.parseInt(challengeDateArray[1]);
-                                int challengeDateYear = Integer.parseInt(challengeDateArray[2]);
-
-                                boolean lastestDayIsPast = false;
-
-                                if (latestDateYear < challengeDateYear) {
-                                    lastestDayIsPast = true;
-                                } else if (latestDateMonth < challengeDateMonth) {
-                                    if (latestDateYear <= challengeDateYear) {
-                                        lastestDayIsPast = true;
-                                    }
-                                } else if (latestDateDay < challengeDateDay) {
-                                    if (latestDateMonth <= challengeDateMonth) {
-                                        if (latestDateYear <= challengeDateYear) {
-                                            lastestDayIsPast = true;
-
-                                        }
-                                    }
-                                }
-//                            Log.v("lastestDayIsPast", String.valueOf(lastestDayIsPast));
-                                if (lastestDayIsPast) {
-                                    championDate = challengeDate;
-                                    latestDate = challengeDate;
-                                    latestIndex = k;
-
-                                }
-
-                                lastestDayIsPast = false;
-
-
-                            }
-                            appendedChampionDate = appendedChampionDate + "  - \n " + latestDate;
-
-
-                            transferArray[0] = dateArray[i];
-                            dateArray[i] = dateArray[latestIndex];
-
-                            dateArray[latestIndex] = transferArray[0];
-
-                            Log.v("championDate", latestDate + latestIndex);
-
-
-                            elementArray = dateArray[i].split("%");
-                            Log.d("array", Arrays.toString(elementArray));
-                            elementMode = elementArray[0];
-
-
-                            if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
-                                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                                        elementArray[5], elementArray[6], elementArray[7]
-                                        , elementArray[8], elementArray[0]));
-                            } else {
-                                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                                        elementArray[5], elementArray[6], elementArray[7]
-                                        , elementArray[0]));
-                            }
-
-
-                        }
-
-
-
-
-
-
-                        Log.v("appendedchampionDate",appendedChampionDate);
-
-                        mProgress.hide();
-                        EventList();
-
-                    }
 
 
                 }
@@ -995,6 +728,7 @@ public class Newsfeed extends Activity
 
 
         sDepartment =  mPrefs.getString("Department", "unknown");
+        globalDepartment = sDepartment;
         String semester = mPrefs.getString("Semester", "default_value_if_variable_not_found");
 
         if (semester.equals("1")) {
@@ -1053,13 +787,13 @@ public class Newsfeed extends Activity
             dayIndex = 1;
             localDayIndex = 1;
         }
-        String timetable = "  10:10 -  10:55<time>  10:55 -  11:40<time>  11:40 -  12:25<time>  12:25 -  01:10<type6280>" +
+        String timetable = "<semester2221>  10:10 -  10:55<time>  10:55 -  11:40<time>  11:40 -  12:25<time>  12:25 -  01:10<type6280>" +
                 "CA<subjects>BS<subjects>ME<subjects>BC-II<subjects><type6280>" +
                 "MTP<subjects>CA<subjects>BS<subjects>ME<subjects><type6280>" +
                 "LRF<subjects>ME<subjects>CA<subjects>BS<subjects><type6280>" +
                 "BC-II<subjects>LRF<subjects>MTP<subjects>CA<subjects><type6280>" +
                 "BS<subjects>BC-II<subjects>LRF<subjects>MTP<subjects><type6280>" +
-                "ME<subjects>BC-II<subjects>MTP<subjects>LRF<subjects><type6280>";
+                "ME<subjects>BC-II<subjects>MTP<subjects>LRF<subjects><type6280><semester2221>";
 
         String dataSplit[] =  timetable.split("<type6280>");
         String timeSlots[] = dataSplit[0].split("<time>");
@@ -1238,12 +972,15 @@ public class Newsfeed extends Activity
 
         }else if(mode.equals("eventViewer")){
 
+
             newsfeedAdapter adapter = new newsfeedAdapter(this, words);
 
 
             ListView listView = (ListView) findViewById(R.id.list);
 
             listView.setAdapter(adapter);
+
+
 
             if(end) {
 
@@ -1344,11 +1081,17 @@ public class Newsfeed extends Activity
 
                     }
 
-
                 });
             }
 
         }
+    }
+
+    public void onClickListViewLayout(View v)
+    {
+
+       LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+        timetableOverallLayout.setVisibility(View.GONE);
     }
 
     public void onClickRightArrow(View v)
@@ -1358,6 +1101,20 @@ public class Newsfeed extends Activity
     public void onClickLeftArrow(View v)
     {
         timetableDataConversion(--dayIndex);
+    }
+    public void onClickTimetable(View v)
+    {
+     if(timetableVisible)
+     {
+         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+         timetableOverallLayout.setVisibility(View.GONE);
+         timetableVisible = false;
+     }else
+     {
+         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+         timetableOverallLayout.setVisibility(View.VISIBLE);
+         timetableVisible = true;
+     }
     }
 
 
@@ -1370,9 +1127,10 @@ public class Newsfeed extends Activity
 
     }
 
+
     public void onClickAnnouncement(View v)
     {
-        Intent selectIntent = new Intent(Newsfeed.this,Newsfeed.class);
+        Intent selectIntent = new Intent(Newsfeed.this,t_Announcement_Viewer.class);
         startActivity(selectIntent);
 
 
@@ -1401,6 +1159,13 @@ public class Newsfeed extends Activity
 
 
     }
+    public void onClickNewsfeed(View v)
+    {
+        Intent selectIntent = new Intent(Newsfeed.this,Newsfeed.class);
+        startActivity(selectIntent);
+
+
+    }
 
     public void onClickPlus(View v)
     {
@@ -1412,59 +1177,7 @@ public class Newsfeed extends Activity
 
 
 
-    private void swipe() {
 
-        TextView head2 = (TextView) findViewById(R.id.head2);
-        TextView head1 = (TextView) findViewById(R.id.head);
-
-        Button button1 = (Button) findViewById(R.id.Button1);
-        Button button2 = (Button) findViewById(R.id.Button2);
-        Button button3 = (Button) findViewById(R.id.Button3);
-
-
-
-        if(a==0){
-
-            Intent selectIntent = new Intent(Newsfeed.this,feedbackWriter.class);
-            startActivity(selectIntent);
-
-        }
-
-
-        if(a==1) {
-
-            Intent selectIntent = new Intent(Newsfeed.this,Newsfeed.class);
-            startActivity(selectIntent);
-
-
-        }
-
-        if(a==2) {
-            Intent selectIntent = new Intent(Newsfeed.this,t_notes_Viewer.class);
-            startActivity(selectIntent);
-        }
-
-        if(a==3) {
-            Intent selectIntent = new Intent(Newsfeed.this,EventViewer.class);
-            startActivity(selectIntent);
-
-        }
-
-        if(a==4){
-            Intent selectIntent = new Intent(Newsfeed.this,t_Teacher_Profile.class);
-            startActivity(selectIntent);
-
-        }
-
-
-
-
-
-
-
-
-
-    }
 
 
 
@@ -1484,7 +1197,7 @@ public class Newsfeed extends Activity
             announcementImageView.setImageResource(R.drawable.announcements);
             notesImageView.setImageResource(R.drawable.notes);
             eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.profile);
+            profileImageView.setImageResource(R.drawable.newsfeed);
 
         }
         if (a == 1) {
@@ -1492,7 +1205,7 @@ public class Newsfeed extends Activity
             announcementImageView.setImageResource(R.drawable.announcements_grey);
             notesImageView.setImageResource(R.drawable.notes);
             eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.profile);
+            profileImageView.setImageResource(R.drawable.newsfeed);
         }
 
         if (a == 2) {
@@ -1500,7 +1213,7 @@ public class Newsfeed extends Activity
             announcementImageView.setImageResource(R.drawable.announcements);
             notesImageView.setImageResource(R.drawable.notes_grey);
             eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.profile);
+            profileImageView.setImageResource(R.drawable.newsfeed);
         }
 
         if (a == 3) {
@@ -1508,7 +1221,7 @@ public class Newsfeed extends Activity
             announcementImageView.setImageResource(R.drawable.announcements);
             notesImageView.setImageResource(R.drawable.notes);
             eventsImageView.setImageResource(R.drawable.events_grey);
-            profileImageView.setImageResource(R.drawable.profile);
+            profileImageView.setImageResource(R.drawable.newsfeed);
         }
 
         if (a == 4) {
@@ -1516,7 +1229,7 @@ public class Newsfeed extends Activity
             announcementImageView.setImageResource(R.drawable.announcements);
             notesImageView.setImageResource(R.drawable.notes);
             eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.profile_grey);
+            profileImageView.setImageResource(R.drawable.newsfeed_grey);
         }
 
 
@@ -1537,6 +1250,215 @@ public class Newsfeed extends Activity
         listviewer.setVisibility(View.VISIBLE);
     }
 
+    public void loadUse()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        boolean firstUse = mPrefs.getBoolean("firstUse", true);
+
+        appFirstUse = firstUse;
+    }
+    public void onClickOk(View v) {
+        Spinner deptSpinner = (Spinner) findViewById(R.id.spinner_department);
+        String dept_filter = String.valueOf(deptSpinner.getSelectedItem());
+
+        if(dept_filter.equals("Department"))
+        {
+            Toast.makeText(this, "Please choose your Department" , Toast.LENGTH_SHORT).show();
+        }
+        else{
+            globalDepartment = dept_filter;
+            saveDepartment();
+            RelativeLayout whatDepartment = (RelativeLayout) findViewById(R.id.whatDepartment);
+            whatDepartment.setVisibility(View.GONE);
+            dept_filter = sDepartment;
+
+            semester_filter = sSemester;
+
+            Date now = new Date();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(now);
+
+
+            dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+            timetableDataConversion(dayIndex);
+
+            getResultsFromApi();
+
+        }
+
+    }
+    public void saveDepartment(){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        mEditor.putString("Department", globalDepartment).commit();
+
+    }
+    public void saveDataArray(String dataArray){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        mEditor.putString("dataArray", dataArray).commit();
+
+    }
+
+    public void loadDataArray(){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        globalDataArrayString = mPrefs.getString("dataArray", "unknown");
+
+    }
+
+    public void sortDataByDate(String dateRetrieved)
+    {
+        saveDataArray(dateRetrieved);
+
+
+        String trimmedString = dateRetrieved.replace("[","");
+        trimmedString = trimmedString.replace("]","");
+
+        trimmedString = trimmedString.replace(" NOTES","NOTES");
+        trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
+        trimmedString = trimmedString.replace(" EVENTS","EVENTS");
+
+
+
+        String dateArray[] = trimmedString.split(",");
+        String elementArray[];
+        String elementMode;
+
+
+
+        int i;
+
+        int latestIndex = 0;
+        String championDate = "date";
+        String descendingDates = "default";
+        String transferArray[] = {"hello","hello"};
+        String appendedChampionDate = ".";
+
+        words.clear();
+        for(i=0;i<dateArray.length;i++) {
+
+            String latestDate;
+//
+            elementArray = dateArray[i].split("%");
+            elementMode = elementArray[0];
+
+
+
+            if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
+                latestDate = elementArray[7];
+
+            } else if (elementMode.contains("EVENTS")) {
+                latestDate = elementArray[3];
+            } else {
+                break;
+            }
+//
+
+
+            int k = i;
+
+            for (k = k; k < dateArray.length; k++) {
+
+                String latestDataArray[] = latestDate.split("/");
+
+                int latestDateDay = Integer.parseInt(latestDataArray[0]);
+                int latestDateMonth = Integer.parseInt(latestDataArray[1]);
+                int latestDateYear = Integer.parseInt(latestDataArray[2]);
+
+
+                elementArray = dateArray[k].split("%");
+                elementMode = elementArray[0];
+                String challengeDate = "o";
+                if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
+                    challengeDate = elementArray[7];
+
+                } else if (elementMode.equals("EVENTS")) {
+                    challengeDate = elementArray[3];
+                } else {
+                    break;
+                }
+
+                String challengeDateArray[] = challengeDate.split("/");
+
+
+                int challengeDateDay = Integer.parseInt(challengeDateArray[0]);
+                int challengeDateMonth = Integer.parseInt(challengeDateArray[1]);
+                int challengeDateYear = Integer.parseInt(challengeDateArray[2]);
+
+                boolean lastestDayIsPast = false;
+
+                if (latestDateYear < challengeDateYear) {
+                    lastestDayIsPast = true;
+                } else if (latestDateMonth < challengeDateMonth) {
+                    if (latestDateYear <= challengeDateYear) {
+                        lastestDayIsPast = true;
+                    }
+                } else if (latestDateDay < challengeDateDay) {
+                    if (latestDateMonth <= challengeDateMonth) {
+                        if (latestDateYear <= challengeDateYear) {
+                            lastestDayIsPast = true;
+
+                        }
+                    }
+                }
+//
+                if (lastestDayIsPast) {
+                    championDate = challengeDate;
+                    latestDate = challengeDate;
+                    latestIndex = k;
+
+                }
+
+                lastestDayIsPast = false;
+
+
+            }
+            appendedChampionDate = appendedChampionDate + "  - \n " + latestDate;
+
+
+            transferArray[0] = dateArray[i];
+            dateArray[i] = dateArray[latestIndex];
+
+            dateArray[latestIndex] = transferArray[0];
+
+
+
+
+            elementArray = dateArray[i].split("%");
+
+            elementMode = elementArray[0];
+
+
+            if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
+                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
+                        elementArray[5], elementArray[6], elementArray[7]
+                        , elementArray[8], elementArray[0]));
+            } else {
+                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
+                        elementArray[5], elementArray[6], elementArray[7]
+                        , elementArray[0]));
+            }
+
+
+        }
+
+
+
+
+
+
+    }
 
 
 

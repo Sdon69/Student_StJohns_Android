@@ -133,7 +133,7 @@ public class t_Signin extends Activity
         loadData();
         if(!sVirginity)
         {
-            Intent selectIntent = new Intent(t_Signin.this,t_Teacher_Profile.class);
+            Intent selectIntent = new Intent(t_Signin.this,Newsfeed.class);
             startActivity(selectIntent);
         }
 
@@ -692,7 +692,7 @@ public class t_Signin extends Activity
 
         Log.v("Saved data" , sPassword);
 
-        Intent selectIntent = new Intent(t_Signin.this,t_Teacher_Profile.class);
+        Intent selectIntent = new Intent(t_Signin.this,Newsfeed.class);
         startActivity(selectIntent);
     }
 

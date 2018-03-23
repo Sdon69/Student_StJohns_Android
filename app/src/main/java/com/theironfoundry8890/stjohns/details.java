@@ -954,7 +954,7 @@ public class details extends Activity
 
 
 
-        Intent selectIntent = new Intent(details.this,dStudentProfile.class);
+        Intent selectIntent = new Intent(details.this,Newsfeed.class);
         startActivity(selectIntent);
     }
 

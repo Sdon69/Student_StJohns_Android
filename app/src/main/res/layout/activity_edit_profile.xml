@@ -80,6 +80,7 @@
                             android:textStyle="bold"
                             android:textSize="15sp"
                             android:textColorHint="#4489c8"
+                            android:maxLength="12"
 
 
                             />
@@ -101,6 +102,7 @@
                             android:textColor="#4489c8"
                             android:textStyle="bold"
                             android:textSize="15sp"
+                            android:maxLength="12"
                             android:textColorHint="#4489c8"/>
 
                     </RelativeLayout>
@@ -119,7 +121,10 @@
                             android:textColor="#4489c8"
                             android:textStyle="bold"
                             android:textSize="15sp"
-                            android:textColorHint="#4489c8"/>
+                            android:textColorHint="#4489c8"
+                            android:layout_alignParentTop="true"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentStart="true" />
 
                     </RelativeLayout>
                     <RelativeLayout
@@ -184,7 +189,10 @@
                             android:textColor="#4489c8"
                             android:textStyle="bold"
                             android:textSize="15sp"
-                            android:textColorHint="#4489c8"/>
+                            android:textColorHint="#4489c8"
+                            android:layout_alignParentTop="true"
+                            android:layout_alignParentLeft="true"
+                            android:layout_alignParentStart="true" />
 
                     </RelativeLayout>
                     <RelativeLayout
@@ -271,6 +279,7 @@
                             android:layout_height="wrap_content"
                             android:textColor="#4489c8"
                             android:textStyle="bold"
+                            android:maxLength="100"
                             android:textSize="15sp"
                             android:textColorHint="#4489c8"/>
 
@@ -287,7 +296,7 @@
                             android:hint="Phone Number"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-
+                            android:maxLength="10"
                             android:textColor="#4489c8"
                             android:textStyle="bold"
                             android:textSize="15sp"

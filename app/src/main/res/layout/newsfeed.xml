@@ -60,7 +60,6 @@
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-
                 android:layout_margin="4dp"
                 android:src="@drawable/timetable_logo" />
 
@@ -91,21 +90,73 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         layout="@layout/timetable"
-        android:visibility="visible"/>
+       />
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/whatDepartment"
+        android:layout_width="220dp"
+        android:layout_height="120dp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/border"
+        android:visibility="gone"
+        android:padding="8dp">
+
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/question"
+            android:layout_centerVertical="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:padding="6dp"
+            android:text="What's Your Department?"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+
+        <Spinner
+            android:id="@+id/spinner_department"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:entries="@array/dept_arrays2"
+            android:prompt="@string/country_prompt"
+            android:layout_below="@+id/question"
+
+
+            android:layout_above="@+id/textView" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:onClick="onClickOk"
+            android:padding="12dp"
+            android:text="OK"
+            android:textColor="@color/colorAccent"
+            android:id="@+id/textView" />
+
+    </RelativeLayout>
 
 
 
     <RelativeLayout
         android:id="@+id/content_viewer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:onClick="onClickListViewLayout">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@+id/navbar"
             android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp">
+            android:layout_marginRight="16dp"
+
+            >
 
             <ListView
                 android:id="@+id/list"
@@ -116,7 +167,6 @@
                 android:dividerHeight="26dp"
                 android:orientation="vertical"
                 android:scrollbars="none"
-
                 />
 
 
@@ -280,7 +330,7 @@
                     android:background="?android:attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
-                    android:onClick="onClickProfile"
+                    android:onClick="onClickNewsfeed"
                     android:orientation="vertical"
 
                     >
@@ -290,14 +340,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:src="@drawable/profile" />
+                        android:src="@drawable/newsfeed" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="0dp"
                         android:layout_gravity="center"
                         android:layout_weight="0.5"
-                        android:text="Profile"
+                        android:text="Feed"
                         android:textAlignment="center"
                         android:textStyle="bold" />
 

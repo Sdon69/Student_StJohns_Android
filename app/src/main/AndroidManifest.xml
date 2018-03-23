@@ -17,7 +17,7 @@
 
         >
         <activity
-            android:name=".dStudentProfile"
+            android:name=".Newsfeed"
             android:label="St Johns" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +32,7 @@
         <activity android:name=".signin"/>
         <activity android:name=".feedbackWriter"/>
         <activity android:name=".BarScan"/>
-        <activity android:name=".Newsfeed"/>
+        <activity android:name=".t_Teacher_Profile"/>
         <activity android:name=".EventViewer"/>
         <activity android:name=".EventWriter"/>
         <activity android:name=".DetailedEvent"/>
@@ -41,7 +41,7 @@
         <activity android:name=".t_notes_writer"/>
         <activity android:name=".t_notes_Viewer"/>
         <activity android:name=".t_Detailed_Notes"/>
-        <activity android:name=".t_Teacher_Profile"/>
+        <activity android:name=".dStudentProfile"/>
         <activity android:name=".t_EditProfileActivity"/>
         <activity android:name=".t_current_password_check"/>
         <activity android:name=".t_ChangePassword"/>
