@@ -25,6 +25,11 @@ public class newsfeedPublic {
 
     private String mMode;
 
+    private String mEliminationMode;
+
+    private String mEliminationUniqueId;
+
+
 
 
 
@@ -61,9 +66,20 @@ public class newsfeedPublic {
         mMode = mode;
     }
 
+    public newsfeedPublic(String eliminationMode, String eliminationUniqueId )
+    {
+
+        mEliminationMode = eliminationMode;
+        mEliminationUniqueId = eliminationUniqueId;
+
+    }
 
 
 
+
+    public String getEliminationMode(){return mEliminationMode;}
+
+    public String getEliminationUniqueId(){return mEliminationUniqueId;}
 
 
     public String getDefaultTranslation()
@@ -101,6 +117,10 @@ public class newsfeedPublic {
         return mEntryFees ;
     }
 
+    public String getEliminationDetails() {
+        return mEntryFees ;
+    }
+
     public String toString(){
             Log.v("mMode",mMode);
         if(mMode.contains("ANNOUNCEMENTS"))
@@ -110,12 +130,12 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment;
+                    + "%" + mFullName  + "%" + mFileAttachment + "%" + "678874" + mEntryFees ;
         }else if(mMode.contains("EVENTS") )
         {
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +
-                    mEntryFees  + "%" + mFullName;
+                    mEntryFees  + "%" + mFullName + "%" + "678874" + mEntryFees ;
         }else
         {
 
@@ -123,7 +143,7 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment;
+                    + "%" + mFullName  + "%" + mFileAttachment + "%" + "678874" + mEntryFees ;
         }
 
     }

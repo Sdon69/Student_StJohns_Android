@@ -74,6 +74,10 @@ public class Newsfeed extends Activity
     private String newsfeedAnnouncementTimestamp;
     private String newsfeedEventTimestamp;
 
+    private String newsfeedNotesTimestampHolder;
+    private String newsfeedAnnouncementTimestampHolder;
+    private String newsfeedEventTimestampHolder;
+
     private boolean isNotesTimestampUpdated;
     private boolean isAnnouncementTimestampUpdated;
     private boolean isEventTimestampUpdated;
@@ -84,7 +88,7 @@ public class Newsfeed extends Activity
     private TextView mOutputText;
     private String sPassword;private String userId;
     private boolean idAvailcheck = true;
-    private String mode = "announcementViewer" ;
+    private String mode = "timestampViewer" ;
 
     private int a = 4;
     private float x1,x2;
@@ -103,7 +107,13 @@ public class Newsfeed extends Activity
     private String lastDateofRegistration;
     private String fees;
     final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
+
     final ArrayList<newsfeedPublic> containers = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> newsfeedAnnouncements = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> newsfeedEvents = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> newsfeedNotes = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> toBeEliminated = new ArrayList<newsfeedPublic>();
+
 
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
@@ -195,6 +205,7 @@ public class Newsfeed extends Activity
                     getApplicationContext(), Arrays.asList(SCOPES))
                     .setBackOff(new ExponentialBackOff());
             loadData();
+            loadDataArray();
 
             if(globalDepartment.equals("unknown")) {
                 RelativeLayout whatDepartment = (RelativeLayout) findViewById(R.id.whatDepartment);
@@ -202,10 +213,11 @@ public class Newsfeed extends Activity
             }else
 
             {
-
+                Log.v("globalDataArrayString","check");
                 loadDataArray();
                 if(!globalDataArrayString.equals("unknown"))
                 {
+                    Log.v("check","check2");
                     sortDataByDate(globalDataArrayString);
                     EventList();
                 }
@@ -479,7 +491,7 @@ public class Newsfeed extends Activity
             String spreadsheetId = "116OBhXliG69OB5bKRAEwpmlOz21LCCWStniSuIR6wPI";
             int a = 2;
             idAvailcheck = true;
-            String range = "Stj Teacher Notes!".concat("A"+ a++ + ":I");
+            String range = "Stj Teacher Notes!".concat("A"+ a++ + ":J");
             end = false;
 
 
@@ -523,6 +535,8 @@ public class Newsfeed extends Activity
 
                 for (List row : values) {
 
+
+
                     if(mode.equals("timestampViewer"))
                     {
                         String modeRetrieved = String.valueOf(row.get(0));
@@ -531,29 +545,43 @@ public class Newsfeed extends Activity
                         {
                            isAnnouncementTimestampUpdated =
                                    timestampCompare(timeStamp,newsfeedAnnouncementTimestamp);
+                            newsfeedAnnouncementTimestampHolder = timeStamp;
+
                         }else if(modeRetrieved.equals("eventViewer"))
                         {
                             isEventTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedEventTimestamp);
+                            newsfeedEventTimestampHolder = timeStamp;
 
                         }else if(modeRetrieved.equals("notesViewer"))
                         {
                             isNotesTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedNotesTimestamp);
+                            newsfeedNotesTimestampHolder = timeStamp;
                         }
                     }
 
 
                     if(mode.equals("announcementViewer")) {
 
+                        if(isAnnouncementTimestampUpdated)
+                            break;
+
+                        String timeStamp = String.valueOf(row.get(8));
+
+                        if(Integer.parseInt(timeStamp)<=Integer.parseInt(newsfeedAnnouncementTimestamp))
+                            continue;
+
                         dId = String.valueOf(row.get(0));
 
                         dRow = row;
 
-                        if(isAnnouncementTimestampUpdated)
-                            break;
+
 
                         if (dId.contains("BonBlank88")) {
+
+
+                            toBeEliminated.add(new newsfeedPublic("ANNOUNCEMENTS", String.valueOf(row.get(5))));
 
                             end = true;
 
@@ -567,6 +595,7 @@ public class Newsfeed extends Activity
                             if (cataegories.contains(semester_filter)) {
 
                                 title = String.valueOf(row.get(0));
+                                Log.v("annTitle",title);
                                 description = String.valueOf(row.get(1));
                                 String publisherId = String.valueOf(row.get(3));//Departments
                                 fullName = String.valueOf(row.get(4));
@@ -574,7 +603,7 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
-                                containers.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                newsfeedAnnouncements.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
                                         , fileAttachment,"ANNOUNCEMENTS"));
                             }
                         }
@@ -588,10 +617,19 @@ public class Newsfeed extends Activity
                         if(isNotesTimestampUpdated)
                             break;
 
+                        String timeStamp = String.valueOf(row.get(8));
+
+                        if(Integer.parseInt(timeStamp)<=Integer.parseInt(newsfeedNotesTimestamp))
+                            continue;
+
+
+
                         dId = String.valueOf(row.get(0));
 
                         if (dId.contains("BonBlank88"))
                         {
+
+                            toBeEliminated.add(new newsfeedPublic("NOTES", String.valueOf(row.get(5)) ));
 
                             end = true;
 
@@ -599,11 +637,13 @@ public class Newsfeed extends Activity
                         }
 
 
+
                         String cataegories = String.valueOf(row.get(2));
 
                         if(cataegories.contains(dept_filter)) {
                             if(cataegories.contains(semester_filter)) {
                                 title = String.valueOf(row.get(0));
+                                Log.v("notesTitle",title);
                                 description = String.valueOf(row.get(1));
                                 String publisherId = String.valueOf(row.get(3));//Departments
                                 fullName = String.valueOf(row.get(4));
@@ -611,7 +651,7 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
-                                containers.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
+                                newsfeedNotes.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
                                         ,fileAttachment, "NOTES"));
                             }
                         }
@@ -625,10 +665,19 @@ public class Newsfeed extends Activity
                             break;
 
 
+                        String timeStamp = String.valueOf(row.get(11));
+
+                        if(Integer.parseInt(timeStamp)<=Integer.parseInt(newsfeedEventTimestamp))
+                            continue;
+
+
+
+
                         String str1 = String.valueOf(row.get(0));
 
                         if (str1.contains("BonBlank88"))
                         {
+                            toBeEliminated.add(new newsfeedPublic("EVENTS", String.valueOf(row.get(10)) ));
 
                             end = true;
 
@@ -641,6 +690,7 @@ public class Newsfeed extends Activity
 
 
                                 title = String.valueOf(row.get(0));
+
                                 description = String.valueOf(row.get(1));
 
                                 String fullName = String.valueOf(row.get(8));
@@ -652,7 +702,7 @@ public class Newsfeed extends Activity
 
 
 
-        containers.add(new newsfeedPublic(description, title, publishDate, eventDate,
+        newsfeedEvents.add(new newsfeedPublic(description, title, publishDate, eventDate,
                                         lastDateofRegistration, fees, fullName,"EVENTS"));
 
                         }
@@ -690,7 +740,14 @@ public class Newsfeed extends Activity
 
                 end = true;
 
-                if(mode.equals("announcementViewer")) {
+                if(mode.equals("timestampViewer")) {
+
+
+                    mode = "announcementViewer";
+
+                    getResultsFromApi();
+
+                }else if(mode.equals("announcementViewer")) {
                     mode = "notesViewer";
 
                     getResultsFromApi();
@@ -702,16 +759,10 @@ public class Newsfeed extends Activity
                 }  else if(mode.equals("eventViewer"))
                 {
 
-
-                    String dateRetrieved = containers.toString();
-                    sortDataByDate(dateRetrieved);
-                    mProgress.hide();
-                    EventList();
+                    postEventViewerMode();
 
 
                 }
-
-
                 }
         }
 
@@ -729,13 +780,27 @@ public class Newsfeed extends Activity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             Newsfeed.REQUEST_AUTHORIZATION);
                 } else {
-                    String dateRetrieved = containers.toString();
-                    sortDataByDate(dateRetrieved);
+
+                    if(mode.equals("timestampViewer")) {
 
 
-                    mProgress.hide();
-                    EventList();
+                        mode = "announcementViewer";
 
+                        getResultsFromApi();
+
+                    }else if(mode.equals("announcementViewer")) {
+                        mode = "notesViewer";
+
+                        getResultsFromApi();
+                    }
+                    else if(mode.equals("notesViewer")) {
+                        mode = "eventViewer";
+
+                        getResultsFromApi();
+                    }  else if(mode.equals("eventViewer"))
+                    {
+                        postEventViewerMode();
+                    }
 
 
                 }
@@ -762,7 +827,14 @@ public class Newsfeed extends Activity
 
 
 
-
+    public void saveTimestamps()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("newsfeedNotesTimestamp", newsfeedNotesTimestamp).commit();
+        mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).commit();
+        mEditor.putString("newsfeedEventTimestamp", newsfeedEventTimestamp).commit();
+    }
 
 
     public void loadData(){
@@ -773,9 +845,9 @@ public class Newsfeed extends Activity
         globalDepartment = sDepartment;
         String semester = mPrefs.getString("Semester", "default_value_if_variable_not_found");
         integerSemester = Integer.parseInt(semester);
-        newsfeedNotesTimestamp =  mPrefs.getString("newsfeedNotesTimestamp", "empty");
-        newsfeedAnnouncementTimestamp = mPrefs.getString("newsfeedAnnouncementTimestamp", "empty");
-        newsfeedEventTimestamp = mPrefs.getString("newsfeedEventTimestamp", "empty");
+        newsfeedNotesTimestamp =  mPrefs.getString("newsfeedNotesTimestamp", "1521000000");
+        newsfeedAnnouncementTimestamp = mPrefs.getString("newsfeedAnnouncementTimestamp", "1521000000");
+        newsfeedEventTimestamp = mPrefs.getString("newsfeedEventTimestamp", "1521000000");
 
         if (semester.equals("1")) {
             sSemester = "First Semester";
@@ -923,7 +995,7 @@ public class Newsfeed extends Activity
             dayText = "Friday";
         else if(localDayIndex == 6)
             dayText = "Saturday";
-        
+
 
         TextView dayOfTheWeek = (TextView) findViewById(R.id.dayOfTheWeek);
         dayOfTheWeek.setText(dayText);
@@ -1069,6 +1141,122 @@ public class Newsfeed extends Activity
 
 
         }else if(mode.equals("eventViewer")){
+
+
+            newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+
+
+            ListView listView = (ListView) findViewById(R.id.list);
+
+            listView.setAdapter(adapter);
+
+
+
+            if(end) {
+
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                        newsfeedPublic word = words.get(position);
+
+                        //Get on clicked data
+                        String exMode = word.getMode();
+                        if(exMode.contains("EVENTS")) {
+                            String exTitle = word.getMiwokTranslation();
+                            String exDesc = word.getDefaultTranslation();
+                            String exPublishDate = word.getPublishDate();
+                            String exEventDate = word.getEventDate();
+                            String exLastDateofRegistation = word.getLastDateofRegistration();
+                            String exFees = word.getEntryFees();
+                            String exFullName = word.getfullName();
+
+
+                            //Save Data
+                            SharedPreferences mPrefs = getSharedPreferences("label", 0);
+                            SharedPreferences.Editor mEditor = mPrefs.edit();
+                            mEditor.putString("title", exTitle).commit();
+                            mEditor.putString("desc", exDesc).commit();
+                            mEditor.putString("publishDate", exPublishDate).commit();
+                            mEditor.putString("eventDate", exEventDate).commit();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
+                            mEditor.putString("fees", exFees).commit();
+                            mEditor.putString("fullName", exFullName).commit();
+
+
+                            Intent selectIntent = new Intent(Newsfeed.this, DetailedEvent.class);
+                            startActivity(selectIntent);
+
+
+                        }else if(exMode.contains("ANNOUNCEMENTS"))
+                        {
+                            String exTitle = word.getMiwokTranslation();  //Title
+                            String exDesc = word.getDefaultTranslation();  //Description
+                            String exPublishDate = word.getPublishDate(); // Cataegories
+                            String exEventDate = word.getEventDate();// Publisher Id
+                            String exFullName = word.getLastDateofRegistration(); //full name
+                            String exFees = word.getEntryFees(); // Unique Id
+                            String exLastDateofRegistation = word.getfullName(); // Publish Date
+                            String exFileAttachment = word.getFileAttachment();
+
+
+
+                            //Save Data
+                            SharedPreferences mPrefs = getSharedPreferences("label", 0);
+                            SharedPreferences.Editor mEditor = mPrefs.edit();
+                            mEditor.putString("title", exTitle).commit();
+                            mEditor.putString("desc", exDesc).commit();
+                            mEditor.putString("publishDate", exPublishDate).commit();
+                            mEditor.putString("eventDate", exEventDate).commit();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
+                            mEditor.putString("fees", exFees).commit();
+                            mEditor.putString("fullName", exFullName).commit();
+                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+
+
+                            Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Announcement.class);
+                            startActivity(selectIntent);
+
+                        }else
+                        {
+                            String exTitle = word.getMiwokTranslation();  //Title
+                            String exDesc = word.getDefaultTranslation();  //Description
+                            String exPublishDate = word.getPublishDate(); // Cataegories
+                            String exEventDate = word.getEventDate();// Publisher Id
+                            String exFullName = word.getLastDateofRegistration(); //full name
+                            String exFees = word.getEntryFees(); // Unique Id
+                            String exLastDateofRegistation = word.getfullName(); // Publish Date
+                            String exFileAttachment = word.getFileAttachment();
+
+
+
+
+                            //Save Data
+                            SharedPreferences mPrefs = getSharedPreferences("label", 0);
+                            SharedPreferences.Editor mEditor = mPrefs.edit();
+                            mEditor.putString("title", exTitle).commit();
+                            mEditor.putString("desc", exDesc).commit();
+                            mEditor.putString("fullName", exFullName).commit();
+                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+
+
+
+
+
+                            Intent selectIntent = new Intent(Newsfeed.this,t_Detailed_Notes.class);
+                            startActivity(selectIntent);
+
+
+                        }
+
+
+                    }
+
+                });
+            }
+
+        }else
+        {
+
 
 
             newsfeedAdapter adapter = new newsfeedAdapter(this, words);
@@ -1400,7 +1588,7 @@ public class Newsfeed extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-
+        Log.v("dataArray",dataArray);
         mEditor.putString("dataArray", dataArray).commit();
 
     }
@@ -1409,12 +1597,14 @@ public class Newsfeed extends Activity
 
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
-        SharedPreferences.Editor mEditor = mPrefs.edit();
 
+        Log.v("globalDataArrayString","before");
         globalDataArrayString = mPrefs.getString("dataArray", "unknown");
+        Log.v("globalDataArrayString",globalDataArrayString);
 
     }
     public boolean timestampCompare(String timestampRetrieved, String timestampStored){
+
 
         return timestampRetrieved.equals(timestampStored);
 
@@ -1447,6 +1637,7 @@ public class Newsfeed extends Activity
         String descendingDates = "default";
         String transferArray[] = {"hello","hello"};
         String appendedChampionDate = ".";
+
 
         words.clear();
         for(i=0;i<dateArray.length;i++) {
@@ -1544,10 +1735,12 @@ public class Newsfeed extends Activity
 
 
             if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
+
                 words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
                         elementArray[5], elementArray[6], elementArray[7]
                         , elementArray[8], elementArray[0]));
             } else {
+
                 words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
                         elementArray[5], elementArray[6], elementArray[7]
                         , elementArray[0]));
@@ -1560,6 +1753,69 @@ public class Newsfeed extends Activity
 
 
 
+
+    }
+
+    public void postEventViewerMode()
+    {
+
+        String newsfeedAnnouncementsString;
+        newsfeedAnnouncementsString = newsfeedAnnouncements.toString().replace("]",",");
+        String newsfeedNotesString;
+        newsfeedNotesString = newsfeedNotes.toString().replace("[","");
+        newsfeedNotesString = newsfeedNotesString.toString().replace("]","");
+        String newsfeedEventString = newsfeedEvents.toString().replace("[","");
+        String storedData;
+        if(!globalDataArrayString.equals("unknown")) {
+
+
+            storedData =  globalDataArrayString.replace("]",",");
+        }else
+        {
+            storedData = "[";
+        }
+        newsfeedAnnouncementTimestamp = newsfeedAnnouncementTimestampHolder;
+        newsfeedEventTimestamp = newsfeedEventTimestampHolder;
+        newsfeedNotesTimestamp = newsfeedNotesTimestampHolder;
+
+        int u;
+        Log.v("toBeEliminated.size", String.valueOf(toBeEliminated.size()));
+        for(u = toBeEliminated.size()-1;u>=0;u--) {
+            newsfeedPublic word = toBeEliminated.get(u);
+
+            //Get on clicked data
+            String exEliminationMode = word.getEliminationMode();
+            String exEliminationUniqueId = word.getEliminationUniqueId();
+            Log.v("exEliminationMode", exEliminationMode);
+            Log.v("exEliminationUniqueId", exEliminationUniqueId);
+            String end = "678874" + exEliminationUniqueId;
+            String start = exEliminationMode;
+            String trimmedStoredData = storedData.substring(storedData.indexOf(start), storedData.lastIndexOf(end));
+
+            Log.v("trimmedStoredData",trimmedStoredData);
+
+
+
+        }
+
+        saveTimestamps();
+
+
+        String dateRetrieved = newsfeedAnnouncementsString + newsfeedNotesString + newsfeedEventString;
+        dateRetrieved = dateRetrieved.replace("[","");
+        dateRetrieved = dateRetrieved.replace(",]","");
+        Log.v("DateRetrrieved",dateRetrieved);
+        String concatenatedData =  storedData + dateRetrieved;
+        concatenatedData = concatenatedData.replace("],]","");
+        concatenatedData = concatenatedData + "]";
+        concatenatedData = concatenatedData.replace(",]","]");
+        concatenatedData = concatenatedData.replace(",,","");
+
+        Log.v("concatenatedData",concatenatedData);
+
+        sortDataByDate(concatenatedData);
+        mProgress.hide();
+        EventList();
 
     }
 
