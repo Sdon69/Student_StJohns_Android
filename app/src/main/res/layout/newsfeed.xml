@@ -45,6 +45,32 @@
                 android:layout_marginTop="3dp"
                 android:background="@color/colorPrimary" />
         </LinearLayout>
+        <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.25"
+            android:paddingTop="10dp"
+            android:visibility="gone"
+            android:id="@+id/progressLayout"
+        >
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+
+        android:id="@+id/progressCircle"
+        />
+            <!--<ImageView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:src="@drawable/loading_icon"-->
+                <!--android:id="@+id/progressImage"/>-->
+
+
+
+
+    </RelativeLayout>
 
 
         <LinearLayout

@@ -118,7 +118,7 @@
             android:layout_above="@+id/navbar"
             android:layout_alignParentRight="true"
             android:layout_margin="20dp"
-
+            android:visibility="invisible"
             android:onClick="onClickPlus"
             android:src="@drawable/plusfloat"
             android:background="@drawable/empty"

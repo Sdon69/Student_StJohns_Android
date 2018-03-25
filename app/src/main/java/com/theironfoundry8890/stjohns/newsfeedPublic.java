@@ -130,12 +130,12 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment + "%" + "678874" + mEntryFees ;
+                    + "%" + mFullName  + "%" + mFileAttachment + " " ;
         }else if(mMode.contains("EVENTS") )
         {
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +
-                    mEntryFees  + "%" + mFullName + "%" + "678874" + mEntryFees ;
+                    mEntryFees  + "%" + mFullName + " " ;
         }else
         {
 
@@ -143,7 +143,7 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment + "%" + "678874" + mEntryFees ;
+                    + "%" + mFullName  + "%" + mFileAttachment + " " ;
         }
 
     }

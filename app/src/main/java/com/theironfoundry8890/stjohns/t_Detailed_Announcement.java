@@ -5,12 +5,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class t_Detailed_Announcement extends AppCompatActivity {
@@ -62,7 +64,14 @@ public class t_Detailed_Announcement extends AppCompatActivity {
         expRealPublishDate = lastDateofReg;
         expFileAttachment = fileAttachment;
 
-        if(fileAttachment !="None") {
+        if(fileAttachment.trim().equals("None")) {
+            RelativeLayout webViewLayout = (RelativeLayout) findViewById(R.id.webViewLayout);
+
+            webViewLayout.setVisibility(View.INVISIBLE);
+
+        }else
+        {
+
             String trimmedFileId = fileAttachment.substring(fileAttachment.lastIndexOf("/d/") + 3, fileAttachment.lastIndexOf("vi") - 1);
             String sourceString = "https://docs.google.com/viewer?srcid=fileid&pid=explorer&efh=false&a=v&chrome=false&embedded=true";
             String generatedSrc = sourceString.replace("fileid", trimmedFileId);
@@ -71,10 +80,6 @@ public class t_Detailed_Announcement extends AppCompatActivity {
             myWebView.loadUrl(generatedSrc);
             WebSettings webSettings = myWebView.getSettings();
             webSettings.setJavaScriptEnabled(true);
-        }else
-        {
-            WebView myWebView = (WebView) findViewById(R.id.webview);
-            myWebView.setVisibility(View.INVISIBLE);
         }
 
         IntializeData();

@@ -70,6 +70,8 @@ public class Newsfeed extends Activity
     private String globalDataArrayString;
     private int integerSemester;
 
+    private boolean retrievingDataEnd = false;
+
     private String newsfeedNotesTimestamp;
     private String newsfeedAnnouncementTimestamp;
     private String newsfeedEventTimestamp;
@@ -527,6 +529,7 @@ public class Newsfeed extends Activity
                     .get(spreadsheetId, range)
                     .execute();
             List<List<Object>> values = response.getValues();
+            Log.v("values", String.valueOf(values));
             if (values != null) {
 
 
@@ -540,21 +543,24 @@ public class Newsfeed extends Activity
                     if(mode.equals("timestampViewer"))
                     {
                         String modeRetrieved = String.valueOf(row.get(0));
-                        String timeStamp = String.valueOf(row.get(1));
+
                         if(modeRetrieved.equals("announcementViewer"))
                         {
+                            String timeStamp = String.valueOf(row.get(1));
                            isAnnouncementTimestampUpdated =
                                    timestampCompare(timeStamp,newsfeedAnnouncementTimestamp);
                             newsfeedAnnouncementTimestampHolder = timeStamp;
 
                         }else if(modeRetrieved.equals("eventViewer"))
                         {
+                            String timeStamp = String.valueOf(row.get(1));
                             isEventTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedEventTimestamp);
                             newsfeedEventTimestampHolder = timeStamp;
 
                         }else if(modeRetrieved.equals("notesViewer"))
                         {
+                            String timeStamp = String.valueOf(row.get(1));
                             isNotesTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedNotesTimestamp);
                             newsfeedNotesTimestampHolder = timeStamp;
@@ -581,7 +587,6 @@ public class Newsfeed extends Activity
                         if (dId.contains("BonBlank88")) {
 
 
-                            toBeEliminated.add(new newsfeedPublic("ANNOUNCEMENTS", String.valueOf(row.get(5))));
 
                             end = true;
 
@@ -629,7 +634,6 @@ public class Newsfeed extends Activity
                         if (dId.contains("BonBlank88"))
                         {
 
-                            toBeEliminated.add(new newsfeedPublic("NOTES", String.valueOf(row.get(5)) ));
 
                             end = true;
 
@@ -677,7 +681,6 @@ public class Newsfeed extends Activity
 
                         if (str1.contains("BonBlank88"))
                         {
-                            toBeEliminated.add(new newsfeedPublic("EVENTS", String.valueOf(row.get(10)) ));
 
                             end = true;
 
@@ -720,7 +723,8 @@ public class Newsfeed extends Activity
         @Override
         protected void onPreExecute() {
             mOutputText.setText("");
-//            mProgress.show();
+            showLoading();
+
 
 
 
@@ -742,27 +746,65 @@ public class Newsfeed extends Activity
 
                 if(mode.equals("timestampViewer")) {
 
-
-                    mode = "announcementViewer";
-
-                    getResultsFromApi();
+                    if(!isAnnouncementTimestampUpdated) {
+                        mode = "announcementViewer";
+                        getResultsFromApi();
+                    }else if(!isNotesTimestampUpdated)
+                    {
+                        mode = "notesViewer";
+                        getResultsFromApi();
+                    }else if(!isEventTimestampUpdated)
+                    {
+                        mode = "eventViewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        retrievingDataEnd = true;
+                        hideLoading();
+                    }
 
                 }else if(mode.equals("announcementViewer")) {
-                    mode = "notesViewer";
 
-                    getResultsFromApi();
+                    if(!isNotesTimestampUpdated)
+                    {
+                        mode = "notesViewer";
+                        getResultsFromApi();
+                    }else if(!isEventTimestampUpdated)
+                    {
+                        mode = "eventViewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        retrievingDataEnd = true;
+                        hideLoading();
+                    }
+
                 }
                 else if(mode.equals("notesViewer")) {
-                    mode = "eventViewer";
 
-                    getResultsFromApi();
+                    if(!isEventTimestampUpdated)
+                    {
+                        mode = "eventViewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        retrievingDataEnd = true;
+                        hideLoading();
+                    }
                 }  else if(mode.equals("eventViewer"))
                 {
 
-                    postEventViewerMode();
-
+                    retrievingDataEnd = true;
+                    if(globalDataArrayString.equals("unknown"))
+                        postEventViewerMode();
 
                 }
+
+                if(retrievingDataEnd) {
+                    if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
+                        postEventViewerMode();
+                }
+
                 }
         }
 
@@ -781,27 +823,68 @@ public class Newsfeed extends Activity
                             Newsfeed.REQUEST_AUTHORIZATION);
                 } else {
 
+                    end = true;
+
                     if(mode.equals("timestampViewer")) {
 
-
-                        mode = "announcementViewer";
-
-                        getResultsFromApi();
+                        if(!isAnnouncementTimestampUpdated) {
+                            mode = "announcementViewer";
+                            getResultsFromApi();
+                        }else if(!isNotesTimestampUpdated)
+                        {
+                            mode = "notesViewer";
+                            getResultsFromApi();
+                        }else if(!isEventTimestampUpdated)
+                        {
+                            mode = "eventViewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            retrievingDataEnd = true;
+                            hideLoading();
+                        }
 
                     }else if(mode.equals("announcementViewer")) {
-                        mode = "notesViewer";
 
-                        getResultsFromApi();
+                        if(!isNotesTimestampUpdated)
+                        {
+                            mode = "notesViewer";
+                            getResultsFromApi();
+                        }else if(!isEventTimestampUpdated)
+                        {
+                            mode = "eventViewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            retrievingDataEnd = true;
+                            hideLoading();
+                        }
+
                     }
                     else if(mode.equals("notesViewer")) {
-                        mode = "eventViewer";
 
-                        getResultsFromApi();
+                        if(!isEventTimestampUpdated)
+                        {
+                            mode = "eventViewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            retrievingDataEnd = true;
+                            hideLoading();
+                        }
                     }  else if(mode.equals("eventViewer"))
                     {
-                        postEventViewerMode();
+
+                        retrievingDataEnd = true;
+                        if(globalDataArrayString.equals("unknown"))
+                            postEventViewerMode();
+
                     }
 
+                    if(retrievingDataEnd) {
+                        if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
+                            postEventViewerMode();
+                    }
 
                 }
             } else {
@@ -905,6 +988,12 @@ public class Newsfeed extends Activity
             dayIndex = 1;
             localDayIndex = 1;
         }
+
+        if(dayIndex==0)
+        {
+            dayIndex = 1;
+            localDayIndex = 1;
+        }
         String timetable = "<semester6643>1" +
                 "<type6280>" +
                 "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
@@ -982,7 +1071,7 @@ public class Newsfeed extends Activity
 
 
         String dayText = "default";
-
+        Log.v("local", String.valueOf(localDayIndex));
         if(localDayIndex == 1)
             dayText = "Monday";
         else if(localDayIndex == 2)
@@ -1002,7 +1091,7 @@ public class Newsfeed extends Activity
 
 
         String daySlots [] = dataSplit[2].split("<days5548>");
-        String subjectSlots[] = daySlots[localDayIndex-1].split("<subjects5432>");
+        String subjectSlots[] = daySlots[localDayIndex - 1].split("<subjects5432>");
         TextView subjectSlot0 = (TextView) findViewById(R.id.subjectSlot0);
         subjectSlot0.setText(subjectSlots[0]);
 
@@ -1633,17 +1722,16 @@ public class Newsfeed extends Activity
         int i;
 
         int latestIndex = 0;
-        String championDate = "date";
-        String descendingDates = "default";
+
         String transferArray[] = {"hello","hello"};
-        String appendedChampionDate = ".";
+
 
 
         words.clear();
         for(i=0;i<dateArray.length;i++) {
 
             String latestDate;
-//
+
             elementArray = dateArray[i].split("%");
             elementMode = elementArray[0];
 
@@ -1708,17 +1796,17 @@ public class Newsfeed extends Activity
                 }
 //
                 if (lastestDayIsPast) {
-                    championDate = challengeDate;
+
                     latestDate = challengeDate;
                     latestIndex = k;
 
                 }
 
-                lastestDayIsPast = false;
+
 
 
             }
-            appendedChampionDate = appendedChampionDate + "  - \n " + latestDate;
+
 
 
             transferArray[0] = dateArray[i];
@@ -1727,9 +1815,18 @@ public class Newsfeed extends Activity
             dateArray[latestIndex] = transferArray[0];
 
 
+            if(i==dateArray.length-1) {
+
+                elementArray = dateArray[dateArray.length - 2].split("%");
+
+            }
+            else
+            {
+                elementArray = dateArray[i].split("%");
+            }
 
 
-            elementArray = dateArray[i].split("%");
+
 
             elementMode = elementArray[0];
 
@@ -1760,56 +1857,61 @@ public class Newsfeed extends Activity
     {
 
         String newsfeedAnnouncementsString;
-        newsfeedAnnouncementsString = newsfeedAnnouncements.toString().replace("]",",");
+        newsfeedAnnouncementsString = newsfeedAnnouncements.toString().replace("[","");
+        newsfeedAnnouncementsString = newsfeedAnnouncementsString.replace("]","");
         String newsfeedNotesString;
         newsfeedNotesString = newsfeedNotes.toString().replace("[","");
-        newsfeedNotesString = newsfeedNotesString.toString().replace("]","");
+        newsfeedNotesString = newsfeedNotesString.replace("]","");
         String newsfeedEventString = newsfeedEvents.toString().replace("[","");
+         newsfeedEventString = newsfeedEventString.replace("]","");
         String storedData;
-        if(!globalDataArrayString.equals("unknown")) {
+        String dataRetrieved ="";
+        if(globalDataArrayString.equals("unknown")) {
+
+            storedData = "[";
+
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved +  newsfeedAnnouncementsString;
 
 
-            storedData =  globalDataArrayString.replace("]",",");
         }else
         {
-            storedData = "[";
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved + "," +  newsfeedAnnouncementsString;
+            storedData =  globalDataArrayString.replace("]","");
         }
         newsfeedAnnouncementTimestamp = newsfeedAnnouncementTimestampHolder;
         newsfeedEventTimestamp = newsfeedEventTimestampHolder;
         newsfeedNotesTimestamp = newsfeedNotesTimestampHolder;
 
-        int u;
-        Log.v("toBeEliminated.size", String.valueOf(toBeEliminated.size()));
-        for(u = toBeEliminated.size()-1;u>=0;u--) {
-            newsfeedPublic word = toBeEliminated.get(u);
 
-            //Get on clicked data
-            String exEliminationMode = word.getEliminationMode();
-            String exEliminationUniqueId = word.getEliminationUniqueId();
-            Log.v("exEliminationMode", exEliminationMode);
-            Log.v("exEliminationUniqueId", exEliminationUniqueId);
-            String end = "678874" + exEliminationUniqueId;
-            String start = exEliminationMode;
-            String trimmedStoredData = storedData.substring(storedData.indexOf(start), storedData.lastIndexOf(end));
-
-            Log.v("trimmedStoredData",trimmedStoredData);
-
-
-
-        }
 
         saveTimestamps();
 
+        Log.v("newsfeed length",newsfeedAnnouncementsString.length() + " " + newsfeedNotesString.length()
+                + " " + newsfeedEventString.length() );
 
-        String dateRetrieved = newsfeedAnnouncementsString + newsfeedNotesString + newsfeedEventString;
-        dateRetrieved = dateRetrieved.replace("[","");
-        dateRetrieved = dateRetrieved.replace(",]","");
-        Log.v("DateRetrrieved",dateRetrieved);
-        String concatenatedData =  storedData + dateRetrieved;
-        concatenatedData = concatenatedData.replace("],]","");
-        concatenatedData = concatenatedData + "]";
-        concatenatedData = concatenatedData.replace(",]","]");
-        concatenatedData = concatenatedData.replace(",,","");
+
+
+        if(newsfeedNotesString.length()>5)
+            dataRetrieved = dataRetrieved  + "," +  newsfeedNotesString;
+
+        if(newsfeedEventString.length()>5)
+            dataRetrieved = dataRetrieved  + "," +  newsfeedEventString;
+
+        Log.v("DateRetrrieved",dataRetrieved);
+
+
+        String concatenatedData =  storedData + dataRetrieved + "]";
+
+        int maxLogSize = 1000;
+        for(int i = 0; i <= concatenatedData.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = (i+1) * maxLogSize;
+            end = end > concatenatedData.length() ? concatenatedData.length() : end;
+            Log.v("data Stripped", concatenatedData.substring(start, end));
+        }
+
 
         Log.v("concatenatedData",concatenatedData);
 
@@ -1817,6 +1919,19 @@ public class Newsfeed extends Activity
         mProgress.hide();
         EventList();
 
+        hideLoading();
+
+    }
+
+    public  void showLoading()
+    {
+        RelativeLayout progressLayout  = (RelativeLayout) findViewById(R.id.progressLayout);
+        progressLayout.setVisibility(View.VISIBLE);
+    }
+    public  void hideLoading()
+    {
+        RelativeLayout progressLayout  = (RelativeLayout) findViewById(R.id.progressLayout);
+        progressLayout.setVisibility(View.GONE);
     }
 
 
