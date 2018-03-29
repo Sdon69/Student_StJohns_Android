@@ -24,6 +24,8 @@
 
     <string-array name="section_title">
         <item>Section</item>
+        <item>A</item>
+        <item>B</item>
 
 
     </string-array>

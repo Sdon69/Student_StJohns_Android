@@ -17,7 +17,7 @@
 
         >
         <activity
-            android:name=".Newsfeed"
+            android:name=".playground_notifications"
             android:label="St Johns" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +30,7 @@
         <activity android:name=".intro"/>
         <activity android:name=".details"/>
         <activity android:name=".signin"/>
+        <activity android:name=".Newsfeed"/>
         <activity android:name=".feedbackWriter"/>
         <activity android:name=".BarScan"/>
         <activity android:name=".t_Teacher_Profile"/>

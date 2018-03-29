@@ -13,7 +13,9 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -69,8 +71,13 @@ public class details extends Activity
     private boolean idAvailcheck = true;
     private String mode = "department";
     private boolean dmode = true;
+    private  EditText lastNameEditText;
+    private String generatedUserId;
 
     private  String classNameString = "a";
+    private String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+    private int timestampIndexer =  timestamp.length() - 1;
+
 
     private ArrayList className = new ArrayList();
     private ArrayList sectionName = new ArrayList();
@@ -125,6 +132,11 @@ public class details extends Activity
         mProgress.setCanceledOnTouchOutside(false);
 
         setContentView(activityLayout);
+        lastNameEditText = (EditText) findViewById(R.id.Student_LName);
+        lastNameEditText.addTextChangedListener(watch);
+
+        setDefaults(); //TODO Remove This
+
 
         Spinner spin = (Spinner) findViewById(R.id.spinner_department);
         spin.setOnItemSelectedListener(this);
@@ -133,6 +145,8 @@ public class details extends Activity
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
+
+        getResultsFromApi();
 
     }
 
@@ -350,11 +364,11 @@ public class details extends Activity
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-        if (mode == "department") {
+        if (mode == "department2") { //TODO Change back to department
             Spinner dept_spin = (Spinner) findViewById(R.id.spinner_department);
             sDepartment = String.valueOf(dept_spin.getSelectedItem());
 
-            if (!sDepartment.equals("Department")) {
+            if (!sDepartment.equals("Department2")) { //TODO Change back to Department
                 mode = "classfeed";
                 dept_spin.setEnabled(false);
                 dept_spin.setClickable(false);
@@ -376,7 +390,7 @@ public class details extends Activity
         }
 
 
-        else if(mode=="classfeed")
+        else if(mode=="classfeed2") // TODO change back to classfeed
         {
 
 
@@ -470,6 +484,10 @@ public class details extends Activity
 
                  spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU"; range = "Sections!".concat("A"+ a++ + ":S");
 
+            }else if(mode.equals("timestamp"))
+            {
+                spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU";
+                range = "Timestamp!".concat("A"+ 4 + ":A");
             }
 
 
@@ -481,11 +499,16 @@ public class details extends Activity
             if (values != null) {
 
 
+
+
                 results.add("");
 
 
                 for (List row : values) {
 
+
+                    if(mode.equals("timestamp"))//TODO Remove timestamp
+                        break;
 
 
                     if(mode=="classfeed")
@@ -613,6 +636,9 @@ public class details extends Activity
                 }
                 if(mode=="Submit") {
                     displayAvailability();
+                }else if (mode.equals("timestamp"))
+                {
+                    loadEmailId();
                 }
             }
         }
@@ -649,7 +675,11 @@ public class details extends Activity
                     }
                     if(mode=="Submit") {
                         displayAvailability();
+                    }else if (mode.equals("timestamp"))
+                    {
+                        loadEmailId();
                     }
+
                 }
             } else {
                 mOutputText.setText("Request cancelled.");
@@ -956,6 +986,91 @@ public class details extends Activity
 
         Intent selectIntent = new Intent(details.this,Newsfeed.class);
         startActivity(selectIntent);
+    }
+
+    TextWatcher watch = new TextWatcher(){
+
+        @Override
+        public void afterTextChanged(Editable arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                      int arg3) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int a, int b, int c) {
+            // TODO Auto-generated method stub
+            EditText firstNameEditText = (EditText) findViewById(R.id.Student_FName);
+            String firstNameEnteredText = String.valueOf(firstNameEditText.getText());
+            Log.v("output", String.valueOf(s));
+            if(firstNameEnteredText.length()<1)
+            {
+                String lastNameEnteredText = String.valueOf(lastNameEditText.getText());
+
+
+                if(lastNameEnteredText.length()<3)
+                   generatedUserId
+                           = lastNameEnteredText +
+                           timestamp.substring(timestampIndexer - 4 , timestampIndexer);
+                else
+                    generatedUserId
+                            = lastNameEnteredText.substring(0,3)
+                            + timestamp.substring(timestampIndexer - 3 , timestampIndexer);
+
+            }else
+            {
+                String lastNameEnteredText = String.valueOf(lastNameEditText.getText());
+                if(lastNameEnteredText.length()<3)
+                generatedUserId
+                        = firstNameEnteredText.substring(0,1)  + lastNameEnteredText +
+                        timestamp.substring(timestampIndexer - 4 , timestampIndexer);
+                else
+                    generatedUserId
+                            = firstNameEnteredText.substring(0,1)  + lastNameEnteredText.substring(0,3) +
+                            timestamp.substring(timestampIndexer - 3 , timestampIndexer);
+
+            }
+
+            EditText userIdEditText = (EditText) findViewById(R.id.User_id);
+            userIdEditText.setText(generatedUserId);
+
+
+
+        }};
+
+    public void setDefaults()
+    {
+        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_department);
+        departmentSpinner.setSelection(3);
+
+        Spinner classSpinner = (Spinner) findViewById(R.id.spinner_class);
+        classSpinner.setSelection(1);
+
+        Spinner sectionSpinner = (Spinner) findViewById(R.id.spinner_section);
+        sectionSpinner.setSelection(1);
+
+        mode = "timestamp";
+
+    }
+
+    public void loadEmailId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        String retrievedEmailId = mPrefs.getString("UserId", "");
+
+        EditText emailIdEditText = (EditText) findViewById(R.id.email_address);
+        emailIdEditText.setText(retrievedEmailId);
+
+
+
+
+
     }
 
 }

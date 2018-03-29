@@ -69,7 +69,8 @@
                     android:hint="Last Name"
                     android:maxLength="12"
                     android:textColorHint="#6a69696b"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold"
+                    />
 
                 <EditText
                     android:id="@+id/User_id"

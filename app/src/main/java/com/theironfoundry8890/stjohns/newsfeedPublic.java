@@ -29,6 +29,8 @@ public class newsfeedPublic {
 
     private String mEliminationUniqueId;
 
+    private String mTimestamp;
+
 
 
 
@@ -38,7 +40,7 @@ public class newsfeedPublic {
 
     public newsfeedPublic(String defaultTranslation, String miwokTranslation , String publishDate ,
                           String eventDate , String lastDateofRegistration,
-                          String entryFees , String fullName,String mode )
+                          String entryFees , String fullName,String mode ,String timestamp )
     {
         mDefaultTranslation = defaultTranslation;
         mMiwokTranslation = miwokTranslation;
@@ -48,12 +50,13 @@ public class newsfeedPublic {
         mEntryFees = entryFees;
         mFullName = fullName;
         mMode = mode;
+        mTimestamp = timestamp;
     }
 
 
     public newsfeedPublic(String defaultTranslation, String miwokTranslation , String publishDate ,
                           String eventDate , String lastDateofRegistration, String entryFees ,
-                          String fullName , String fileAttachment ,String mode)
+                          String fullName , String fileAttachment ,String mode,String timestamp)
     {
         mDefaultTranslation = defaultTranslation;
         mMiwokTranslation = miwokTranslation;
@@ -64,6 +67,7 @@ public class newsfeedPublic {
         mFullName = fullName;
         mFileAttachment = fileAttachment;
         mMode = mode;
+        mTimestamp = timestamp;
     }
 
     public newsfeedPublic(String eliminationMode, String eliminationUniqueId )
@@ -130,12 +134,12 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment + " " ;
+                    + "%" + mFullName  + "%" + mFileAttachment  + "%" + mTimestamp + " " ;
         }else if(mMode.contains("EVENTS") )
         {
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +
-                    mEntryFees  + "%" + mFullName + " " ;
+                    mEntryFees  + "%" + mFullName + "%" + mTimestamp + " " ;
         }else
         {
 
@@ -143,7 +147,7 @@ public class newsfeedPublic {
 
             return mMode  + "%" + mDefaultTranslation  + "%" + mMiwokTranslation + "%" + mPublishDate
                     + "%" + mEventDate  + "%" +  mLastDateofRegistration  + "%" +  mEntryFees
-                    + "%" + mFullName  + "%" + mFileAttachment + " " ;
+                    + "%" + mFullName  + "%" + mFileAttachment+ "%" + mTimestamp + " "  ;
         }
 
     }

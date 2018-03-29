@@ -80,9 +80,9 @@ public class Newsfeed extends Activity
     private String newsfeedAnnouncementTimestampHolder;
     private String newsfeedEventTimestampHolder;
 
-    private boolean isNotesTimestampUpdated;
-    private boolean isAnnouncementTimestampUpdated;
-    private boolean isEventTimestampUpdated;
+    private boolean isNotesTimestampUpdated = false;
+    private boolean isAnnouncementTimestampUpdated = false;
+    private boolean isEventTimestampUpdated = false;
 
 
 
@@ -165,7 +165,7 @@ public class Newsfeed extends Activity
         if(appFirstUse)
         {
 
-            Intent selectIntent = new Intent(Newsfeed.this,signin.class);
+            Intent selectIntent = new Intent(Newsfeed.this,details.class);
             startActivity(selectIntent);
         }else {
 
@@ -549,6 +549,7 @@ public class Newsfeed extends Activity
                             String timeStamp = String.valueOf(row.get(1));
                            isAnnouncementTimestampUpdated =
                                    timestampCompare(timeStamp,newsfeedAnnouncementTimestamp);
+
                             newsfeedAnnouncementTimestampHolder = timeStamp;
 
                         }else if(modeRetrieved.equals("eventViewer"))
@@ -565,13 +566,15 @@ public class Newsfeed extends Activity
                                     timestampCompare(timeStamp,newsfeedNotesTimestamp);
                             newsfeedNotesTimestampHolder = timeStamp;
                         }
+
+                        Log.v("isUpdatedLooped", String.valueOf(isEventTimestampUpdated) + " " +String.valueOf(isNotesTimestampUpdated) + " " +
+                                String.valueOf(isAnnouncementTimestampUpdated) );
                     }
 
 
                     if(mode.equals("announcementViewer")) {
 
-                        if(isAnnouncementTimestampUpdated)
-                            break;
+
 
                         String timeStamp = String.valueOf(row.get(8));
 
@@ -608,8 +611,21 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
+                                description =  splitProtection(description);
+                                title =   splitProtection(title);
+                                cataegories =     splitProtection(cataegories);
+                                publisherId =   splitProtection(publisherId);
+                                fullName =   splitProtection(fullName);
+                                uniqueId =   splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
+
+
+
+
                                 newsfeedAnnouncements.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
-                                        , fileAttachment,"ANNOUNCEMENTS"));
+                                        , fileAttachment,"ANNOUNCEMENTS",timeStamp));
                             }
                         }
 
@@ -619,8 +635,7 @@ public class Newsfeed extends Activity
 
                     if(mode.equals("notesViewer")) {
 
-                        if(isNotesTimestampUpdated)
-                            break;
+
 
                         String timeStamp = String.valueOf(row.get(8));
 
@@ -655,8 +670,18 @@ public class Newsfeed extends Activity
                                 String datePublished = String.valueOf(row.get(6));
                                 String fileAttachment = String.valueOf(row.get(7));
 
+                                description =  splitProtection(description);
+                                title =   splitProtection(title);
+                                cataegories =     splitProtection(cataegories);
+                                publisherId =   splitProtection(publisherId);
+                                fullName =   splitProtection(fullName);
+                                uniqueId =   splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
+
                                 newsfeedNotes.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
-                                        ,fileAttachment, "NOTES"));
+                                        ,fileAttachment, "NOTES",timeStamp));
                             }
                         }
 
@@ -665,8 +690,7 @@ public class Newsfeed extends Activity
                     else if(mode.equals("eventViewer"))
                     {
 
-                        if(isEventTimestampUpdated)
-                            break;
+
 
 
                         String timeStamp = String.valueOf(row.get(11));
@@ -703,10 +727,20 @@ public class Newsfeed extends Activity
                                 fees = String.valueOf(row.get(5));
                                 fees = " ₹".concat(fees);
 
+                                description = splitProtection(description);
+                                title =       splitProtection(title);
+                                publishDate =         splitProtection(publishDate);
+                                eventDate =         splitProtection(eventDate);
+                                lastDateofRegistration =            splitProtection(lastDateofRegistration);
+                                fees =            splitProtection(fees);
+                                fullName =            splitProtection(fullName);
+                                timeStamp =            splitProtection(timeStamp);
+
+
 
 
         newsfeedEvents.add(new newsfeedPublic(description, title, publishDate, eventDate,
-                                        lastDateofRegistration, fees, fullName,"EVENTS"));
+                                        lastDateofRegistration, fees, fullName,"EVENTS",timeStamp));
 
                         }
                     } //End of eventViewer Mode
@@ -746,14 +780,14 @@ public class Newsfeed extends Activity
 
                 if(mode.equals("timestampViewer")) {
 
-                    if(!isAnnouncementTimestampUpdated) {
+                    if(isAnnouncementTimestampUpdated) {
                         mode = "announcementViewer";
                         getResultsFromApi();
-                    }else if(!isNotesTimestampUpdated)
+                    }else if(isNotesTimestampUpdated)
                     {
                         mode = "notesViewer";
                         getResultsFromApi();
-                    }else if(!isEventTimestampUpdated)
+                    }else if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
                         getResultsFromApi();
@@ -765,11 +799,11 @@ public class Newsfeed extends Activity
 
                 }else if(mode.equals("announcementViewer")) {
 
-                    if(!isNotesTimestampUpdated)
+                    if(isNotesTimestampUpdated)
                     {
                         mode = "notesViewer";
                         getResultsFromApi();
-                    }else if(!isEventTimestampUpdated)
+                    }else if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
                         getResultsFromApi();
@@ -782,7 +816,7 @@ public class Newsfeed extends Activity
                 }
                 else if(mode.equals("notesViewer")) {
 
-                    if(!isEventTimestampUpdated)
+                    if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
                         getResultsFromApi();
@@ -793,13 +827,15 @@ public class Newsfeed extends Activity
                     }
                 }  else if(mode.equals("eventViewer"))
                 {
-
+                    Log.v("retrievingDataEnd", String.valueOf(retrievingDataEnd));
                     retrievingDataEnd = true;
                     if(globalDataArrayString.equals("unknown"))
                         postEventViewerMode();
 
                 }
-
+                Log.v("EndForRetrDataEnd", String.valueOf(retrievingDataEnd));
+                Log.v("isUpdated", String.valueOf(isEventTimestampUpdated) + " " +String.valueOf(isNotesTimestampUpdated) + " " +
+                        String.valueOf(isAnnouncementTimestampUpdated) );
                 if(retrievingDataEnd) {
                     if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                         postEventViewerMode();
@@ -827,14 +863,14 @@ public class Newsfeed extends Activity
 
                     if(mode.equals("timestampViewer")) {
 
-                        if(!isAnnouncementTimestampUpdated) {
+                        if(isAnnouncementTimestampUpdated) {
                             mode = "announcementViewer";
                             getResultsFromApi();
-                        }else if(!isNotesTimestampUpdated)
+                        }else if(isNotesTimestampUpdated)
                         {
                             mode = "notesViewer";
                             getResultsFromApi();
-                        }else if(!isEventTimestampUpdated)
+                        }else if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
                             getResultsFromApi();
@@ -846,11 +882,11 @@ public class Newsfeed extends Activity
 
                     }else if(mode.equals("announcementViewer")) {
 
-                        if(!isNotesTimestampUpdated)
+                        if(isNotesTimestampUpdated)
                         {
                             mode = "notesViewer";
                             getResultsFromApi();
-                        }else if(!isEventTimestampUpdated)
+                        }else if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
                             getResultsFromApi();
@@ -863,7 +899,7 @@ public class Newsfeed extends Activity
                     }
                     else if(mode.equals("notesViewer")) {
 
-                        if(!isEventTimestampUpdated)
+                        if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
                             getResultsFromApi();
@@ -1027,8 +1063,8 @@ public class Newsfeed extends Activity
                 "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
                 "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
                 "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
-                "CM<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
-                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CM<subjects5432><days5548>" +
+                "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
+                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
                 "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>"+
                 "<semester6643>5" +
                 "<type6280>" +
@@ -1036,8 +1072,8 @@ public class Newsfeed extends Activity
                 "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
                 "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
                 "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
-                "CM<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
-                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CM<subjects5432><days5548>" +
+                "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
+                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
                 "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
                 "<semester6643>6" +
                 "<type6280>" +
@@ -1695,7 +1731,7 @@ public class Newsfeed extends Activity
     public boolean timestampCompare(String timestampRetrieved, String timestampStored){
 
 
-        return timestampRetrieved.equals(timestampStored);
+        return !timestampRetrieved.equals(timestampStored);
 
     }
 
@@ -1738,10 +1774,10 @@ public class Newsfeed extends Activity
 
 
             if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
-                latestDate = elementArray[7];
+                latestDate = elementArray[9];
 
             } else if (elementMode.contains("EVENTS")) {
-                latestDate = elementArray[3];
+                latestDate = elementArray[8];
             } else {
                 break;
             }
@@ -1751,49 +1787,33 @@ public class Newsfeed extends Activity
             int k = i;
 
             for (k = k; k < dateArray.length; k++) {
-
-                String latestDataArray[] = latestDate.split("/");
-
-                int latestDateDay = Integer.parseInt(latestDataArray[0]);
-                int latestDateMonth = Integer.parseInt(latestDataArray[1]);
-                int latestDateYear = Integer.parseInt(latestDataArray[2]);
+                latestDate = latestDate.trim();
+                int latestTimestamp = Integer.parseInt(latestDate);
 
 
                 elementArray = dateArray[k].split("%");
                 elementMode = elementArray[0];
                 String challengeDate = "o";
                 if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
-                    challengeDate = elementArray[7];
+                    challengeDate = elementArray[9];
 
                 } else if (elementMode.equals("EVENTS")) {
-                    challengeDate = elementArray[3];
+                    challengeDate = elementArray[8];
                 } else {
                     break;
                 }
 
-                String challengeDateArray[] = challengeDate.split("/");
+
+                challengeDate = challengeDate.trim();
+                int challengeTimestamp = Integer.parseInt(challengeDate);
 
 
-                int challengeDateDay = Integer.parseInt(challengeDateArray[0]);
-                int challengeDateMonth = Integer.parseInt(challengeDateArray[1]);
-                int challengeDateYear = Integer.parseInt(challengeDateArray[2]);
 
                 boolean lastestDayIsPast = false;
 
-                if (latestDateYear < challengeDateYear) {
-                    lastestDayIsPast = true;
-                } else if (latestDateMonth < challengeDateMonth) {
-                    if (latestDateYear <= challengeDateYear) {
-                        lastestDayIsPast = true;
-                    }
-                } else if (latestDateDay < challengeDateDay) {
-                    if (latestDateMonth <= challengeDateMonth) {
-                        if (latestDateYear <= challengeDateYear) {
-                            lastestDayIsPast = true;
+               if(challengeTimestamp >= latestTimestamp )
+                   lastestDayIsPast = true;
 
-                        }
-                    }
-                }
 //
                 if (lastestDayIsPast) {
 
@@ -1815,7 +1835,7 @@ public class Newsfeed extends Activity
             dateArray[latestIndex] = transferArray[0];
 
 
-            if(i==dateArray.length-1) {
+            if(i==dateArray.length) {
 
                 elementArray = dateArray[dateArray.length - 2].split("%");
 
@@ -1829,18 +1849,30 @@ public class Newsfeed extends Activity
 
 
             elementMode = elementArray[0];
+            String element0 = splitProtectionDeactivated(elementArray[0]);
+            String element1 = splitProtectionDeactivated(elementArray[1]);
+            String element2 = splitProtectionDeactivated(elementArray[2]);
+            String element3 = splitProtectionDeactivated(elementArray[3]);
+            String element4 = splitProtectionDeactivated(elementArray[4]);
+            String element5 = splitProtectionDeactivated(elementArray[5]);
+            String element6 = splitProtectionDeactivated(elementArray[6]);
+            String element7 = splitProtectionDeactivated(elementArray[7]);
+            String element8 = splitProtectionDeactivated(elementArray[8]);
+
 
 
             if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
 
-                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                        elementArray[5], elementArray[6], elementArray[7]
-                        , elementArray[8], elementArray[0]));
+                String element9 = splitProtectionDeactivated(elementArray[9]);
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element8, element0,element9));
             } else {
 
-                words.add(new newsfeedPublic(elementArray[1], elementArray[2], elementArray[3], elementArray[4],
-                        elementArray[5], elementArray[6], elementArray[7]
-                        , elementArray[0]));
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element0,element8));
             }
 
 
@@ -1932,6 +1964,22 @@ public class Newsfeed extends Activity
     {
         RelativeLayout progressLayout  = (RelativeLayout) findViewById(R.id.progressLayout);
         progressLayout.setVisibility(View.GONE);
+    }
+
+    public String  splitProtection(String original)
+    {
+        original = original.replace(",","<comma5582>");
+        original = original.replace("%","<percent6643>");
+
+        return original;
+    }
+
+    public String  splitProtectionDeactivated(String original)
+    {
+        original = original.replace("<comma5582>",",");
+        original = original.replace("<percent6643>","%");
+
+        return original;
     }
 
 
