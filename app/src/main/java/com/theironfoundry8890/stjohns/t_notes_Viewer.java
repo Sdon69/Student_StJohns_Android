@@ -245,7 +245,7 @@ public class t_notes_Viewer extends Activity
 
             } else {
                 // Start a dialog from which the user can choose an account
-                Log.v("Google Accounts","Select");
+                Log.v("Google Accounts","Selected Account");
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);

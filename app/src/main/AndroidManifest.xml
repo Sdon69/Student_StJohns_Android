@@ -7,7 +7,12 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
+    <!--<service-->
+        <!--android:name=".MyFirebaseInstanceIDService">-->
+        <!--<intent-filter>-->
+            <!--<action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>-->
+        <!--</intent-filter>-->
+    <!--</service>-->
 
     <application
         android:allowBackup="true"
@@ -16,8 +21,9 @@
         android:theme="@style/AppTheme"
 
         >
+
         <activity
-            android:name=".playground_notifications"
+            android:name=".Newsfeed"
             android:label="St Johns" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,12 +31,11 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".Select" />
         <activity android:name=".jfw"/>
         <activity android:name=".intro"/>
         <activity android:name=".details"/>
         <activity android:name=".signin"/>
-        <activity android:name=".Newsfeed"/>
+        <activity android:name=".playground_notifications"/>
         <activity android:name=".feedbackWriter"/>
         <activity android:name=".BarScan"/>
         <activity android:name=".t_Teacher_Profile"/>

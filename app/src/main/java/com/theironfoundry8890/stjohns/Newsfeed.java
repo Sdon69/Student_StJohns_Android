@@ -4,6 +4,8 @@ import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -11,8 +13,10 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -42,9 +46,14 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,11 +79,14 @@ public class Newsfeed extends Activity
     private String globalDataArrayString;
     private int integerSemester;
 
+
     private boolean retrievingDataEnd = false;
 
     private String newsfeedNotesTimestamp;
     private String newsfeedAnnouncementTimestamp;
     private String newsfeedEventTimestamp;
+
+    private String timeCollection[];
 
     private String newsfeedNotesTimestampHolder;
     private String newsfeedAnnouncementTimestampHolder;
@@ -156,6 +168,7 @@ public class Newsfeed extends Activity
      * Create the main activity.
      * @param savedInstanceState previously saved instance data.
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -244,7 +257,18 @@ public class Newsfeed extends Activity
         }
 
     }
-
+//    public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService
+//    {
+//        private final String TAG="your_tag";
+//        @Override
+//        public void onTokenRefresh() {
+//
+//
+//            // Get updated InstanceID token.
+//            String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+//            FirebaseMessaging.getInstance().subscribeToTopic("com.theironfoundry8890.stjohns");
+//        }
+//    }
 
 
     /**
@@ -1016,6 +1040,7 @@ public class Newsfeed extends Activity
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void timetableDataConversion(int localDayIndex)
     {
 
@@ -1032,7 +1057,7 @@ public class Newsfeed extends Activity
         }
         String timetable = "<semester6643>1" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
                 "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
                 "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
@@ -1041,7 +1066,7 @@ public class Newsfeed extends Activity
                 "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
                 "<semester6643>2" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
                 "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
                 "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
@@ -1050,7 +1075,7 @@ public class Newsfeed extends Activity
                 "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
                 "<semester6643>3" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
                 "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
                 "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
@@ -1059,7 +1084,7 @@ public class Newsfeed extends Activity
                 "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
         "<semester6643>4" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
                 "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
                 "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
@@ -1068,7 +1093,7 @@ public class Newsfeed extends Activity
                 "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>"+
                 "<semester6643>5" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
                 "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
                 "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
@@ -1077,7 +1102,7 @@ public class Newsfeed extends Activity
                 "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
                 "<semester6643>6" +
                 "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  01:10<type6280>" +
+                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
                 "MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432>AUDITING<subjects5432><days5548>" +
                 "VAT & ST<subjects5432>MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432><days5548>" +
                 "F ECOM<subjects5432>Int Trade<subjects5432>SM & BP<subjects5432>MIS<subjects5432><days5548>" +
@@ -1092,9 +1117,10 @@ public class Newsfeed extends Activity
         String timeSlots[] = dataSplit[1].split("<time2298>");
 
 
-
         TextView timeSlot0 = (TextView) findViewById(R.id.timeSlot0);
         timeSlot0.setText(timeSlots[0]);
+
+
 
         TextView timeSlot1 = (TextView) findViewById(R.id.timeSlot1);
         timeSlot1.setText(timeSlots[1]);
@@ -1104,6 +1130,35 @@ public class Newsfeed extends Activity
 
         TextView timeSlot3 = (TextView) findViewById(R.id.timeSlot3);
         timeSlot3.setText(timeSlots[3]);
+        int t;
+        String returnedString = "0";
+        boolean initial = false;
+        boolean limit = false;
+        boolean limit0 = false;
+        int subjectIndex = 0;
+        for(t = 0;t<timeSlots.length;t++)
+        {
+            if(t == 0)
+                initial = true;
+
+
+
+
+             returnedString = calculateTimeLeft(timeSlots[t],initial,limit);
+            initial = false;
+
+
+            Log.v("returnedString",returnedString);
+            if(!returnedString.equals("break"))
+            {
+                subjectIndex = t;
+                break;
+            }
+
+        }
+        Log.v("out for", returnedString );
+
+//        String constructedString = ""
 
 
         String dayText = "default";
@@ -1139,6 +1194,15 @@ public class Newsfeed extends Activity
 
         TextView subjectSlot3 = (TextView) findViewById(R.id.subjectSlot3);
         subjectSlot3.setText(subjectSlots[3]);
+        String constructionBody = "lets see...";
+        if(!returnedString.equals("break")) {
+
+
+
+              constructionBody = subjectSlots[subjectIndex]+ " starts in " + returnedString + " minutes";
+            generateNotification(constructionBody);
+
+        }
 
 
 
@@ -1505,16 +1569,19 @@ public class Newsfeed extends Activity
         timetableOverallLayout.setVisibility(View.GONE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onClickRightArrow(View v)
     {
         timetableDataConversion(++dayIndex);
     }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onClickLeftArrow(View v)
     {
         timetableDataConversion(--dayIndex);
     }
     public void onClickTimetable(View v)
     {
+
      if(timetableVisible)
      {
          LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
@@ -1668,6 +1735,7 @@ public class Newsfeed extends Activity
 
         appFirstUse = firstUse;
     }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onClickOk(View v) {
         Spinner deptSpinner = (Spinner) findViewById(R.id.spinner_department);
         String dept_filter = String.valueOf(deptSpinner.getSelectedItem());
@@ -1981,7 +2049,98 @@ public class Newsfeed extends Activity
 
         return original;
     }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void generateNotification(String body) {
 
+
+
+
+        NotificationManager notif=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notify=new Notification.Builder
+                (getApplicationContext()).setContentTitle("tiltle").setContentText(body).
+                setContentTitle("Next Period").setSmallIcon(R.drawable.notification_icon).build();
+
+        notify.flags |= Notification.FLAG_AUTO_CANCEL;
+        notif.notify(0, notify);
+    }
+
+    public String calculateTimeLeft(String timeSlots, boolean intial, boolean limit)
+    {
+        int indexNo = 0;
+////        if(intial) {
+////            indexNo = 0;
+////        }else{
+////            indexNo = 1;
+////      }
+//
+//        if(limit)
+//            indexNo = 1;
+
+        Log.v("indexNo", String.valueOf(indexNo));
+        String timeDivide []  = timeSlots.split("-");
+        String periodEnd = timeDivide[indexNo].trim();
+        Log.v("periodEnd",periodEnd);
+        String periodEndTime[] = periodEnd.split(":");
+        int periodEndTimeMinutes = Integer.parseInt(periodEndTime[1]);
+        int periodEndTimeHours = Integer.parseInt(periodEndTime[0]);
+
+
+
+
+        String currentDateTimeString = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        String currentTime[] = currentDateTimeString.split(":");
+        int currentTimeMinutes = Integer.parseInt(currentTime[1]);
+        int currentTimeHours = Integer.parseInt(currentTime[0]);
+        Log.v("currenttime",currentDateTimeString);
+        Log.v("hours ", String.valueOf(periodEndTimeHours) +   String.valueOf(currentTimeHours));
+
+        if(periodEndTimeHours < currentTimeHours){
+            return "break";
+        }
+        if(periodEndTimeMinutes < currentTimeMinutes)  // 11:40 < 11:53
+        {
+            if(periodEndTimeHours <= currentTimeHours) //  11:40 <= 11:53
+            {
+                return "break";
+            }
+        }
+
+
+        if(periodEndTimeHours > currentTimeHours)
+        {
+            int hoursLeft = periodEndTimeHours - currentTimeHours;
+            Log.v("hours left", String.valueOf(periodEndTimeHours - currentTimeHours));
+            int differenceInHours = periodEndTimeHours - currentTimeHours;
+            int minutesLeft = periodEndTimeMinutes + 60 * hoursLeft - currentTimeMinutes;
+            Log.v("minutes Left", String.valueOf(minutesLeft)  );
+            return String.valueOf(minutesLeft);
+        }
+        if(periodEndTimeHours == currentTimeHours)
+        {
+            Log.v("periodEndTimeMinutes", String.valueOf(periodEndTimeMinutes));
+            Log.v("currentTimeMinutes", String.valueOf(currentTimeMinutes));
+
+            int minutesLeft = periodEndTimeMinutes  - currentTimeMinutes;
+            Log.v("minutes Left", String.valueOf(minutesLeft)  );
+            return String.valueOf(minutesLeft);
+        }
+        return "nothing";
+    }
+
+//    public void getSmallestNumber(int[] numberArray)
+//    {
+//        int n;
+//        for(n=0;n>numberArray.length;n++) {
+//
+//            int smallestNumber = numberArray[n];
+//            for(n=1;n>numberArray.length;n++)
+//            {
+//                int challengeNumber = numberArray[n];
+//            }
+//
+//        }
+//
+//    }
 
 
 
