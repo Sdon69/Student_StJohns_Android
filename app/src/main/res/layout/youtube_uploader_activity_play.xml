@@ -1,0 +1,102 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".youtubeDataUploader.PlayActivity">
+
+    <ImageView
+        android:layout_width="106dp"
+        android:layout_height="56dp"
+        android:src="@drawable/sjc"
+        android:layout_gravity="center_horizontal"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:id="@+id/School"
+        android:layout_gravity="center_horizontal"
+        android:textAlignment="center"
+        android:text="St Johns"
+        android:padding="0dp"
+        android:textColor="#2b8de4"
+        android:textStyle="bold"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="26sp"
+        android:id="@+id/detailedlaytitle"
+        android:layout_gravity="center_horizontal"
+        android:textAlignment="center"
+        android:text="Introduction to Management"
+        android:textStyle="bold"
+        android:padding="8dp"
+        android:textColor="#555555"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:id="@+id/publisher"
+        android:layout_gravity="center_horizontal"
+        android:textAlignment="center"
+        android:text="Prateek Singh"
+        android:textColor="#555555"
+        />
+
+    <View android:layout_width="match_parent"
+        android:layout_height="2.5dp"
+        android:layout_marginTop="16dp"
+        android:background="#2b8de4"
+        android:layout_marginLeft="78dp"
+        android:layout_marginRight="78dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:id="@+id/detailedlaydesc"
+        android:padding="16dp"
+        android:lineSpacingMultiplier="1.5"
+        />
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:id="@+id/detail_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#eee"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/submit_button"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableTop="@drawable/s2"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
+            android:hint="@string/button_submit"
+            android:maxLines="2"
+            android:onClick="directLite"
+            android:padding="8dp"
+            android:textAppearance="?android:textAppearanceLarge"
+            android:textColorHint="#c00"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

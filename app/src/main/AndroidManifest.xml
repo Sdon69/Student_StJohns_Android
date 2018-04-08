@@ -64,7 +64,11 @@
         <activity android:name=".s_Attendance_Activity"/>
         <activity android:name=".s_EditProfileActivity"/>
         <activity android:name=".t_Detailed_Announcement"/>
-
+        <activity
+            android:name="com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity"
+            android:label="@string/title_activity_play"
+            android:parentActivityName=".t_notes_Viewer"
+            />
     </application>
 </manifest>
 

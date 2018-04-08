@@ -41,6 +41,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -779,9 +780,15 @@ public class t_notes_Viewer extends Activity
 
 
 
+                    if(exFileAttachment.length()>4 && exFileAttachment.length()<20) {
+                        Intent selectIntent = new Intent(t_notes_Viewer.this, PlayActivity.class);
+                        startActivity(selectIntent);
 
-                    Intent selectIntent = new Intent(t_notes_Viewer.this,t_Detailed_Notes.class);
-                    startActivity(selectIntent);
+                    }else
+                    {
+                        Intent selectIntent = new Intent(t_notes_Viewer.this, t_Detailed_Notes.class);
+                        startActivity(selectIntent);
+                    }
 
 
 

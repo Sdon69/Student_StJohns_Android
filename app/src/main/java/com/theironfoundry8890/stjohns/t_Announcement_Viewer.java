@@ -67,13 +67,23 @@ public class t_Announcement_Viewer extends Activity
     private TextView mOutputText;
     private String sPassword;private String userId;
     private boolean idAvailcheck = true;
+    private String mode = "timestampViewer" ;
+    private boolean isAnnouncementTimestampUpdated = false;
+
+    private String globalDataArrayString;
+    private boolean retrievingDataEnd = false;
+    private String newsfeedAnnouncementTimestamp;
+    private String newsfeedAnnouncementTimestampHolder;
+
+
+
 
     private int a = 1;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
 
     private String fullName;
-
+    final ArrayList<newsfeedPublic> newsfeedAnnouncements = new ArrayList<newsfeedPublic>();
 
     private String title;
     private String description;
@@ -84,7 +94,7 @@ public class t_Announcement_Viewer extends Activity
 
     private String lastDateofRegistration;
     private String fees;
-    final ArrayList<Word> words = new ArrayList<Word>();
+    final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
 
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
@@ -166,6 +176,18 @@ public class t_Announcement_Viewer extends Activity
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         loadData();
+        loadDataArray();
+
+
+        loadDataForList();
+        if(!globalDataArrayString.equals("unknown"))
+        {
+
+            sortDataByDate(globalDataArrayString);
+            EventList();
+        }
+        getResultsFromApi();
+
 
     }
 
@@ -440,6 +462,11 @@ public class t_Announcement_Viewer extends Activity
 
 
 
+            if(mode.equals("timestampViewer"))
+            {
+                spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU";
+                range = "Timestamp!".concat("A"+ 2 + ":B");
+            }
 
             List<String> results = new ArrayList<String>();
             ValueRange response = this.mService.spreadsheets().values()
@@ -453,14 +480,26 @@ public class t_Announcement_Viewer extends Activity
 
 
                 for (List row : values) {
+                    if(mode.equals("timestampViewer")) {
+                        String modeRetrieved = String.valueOf(row.get(0));
 
+                        if (modeRetrieved.equals("announcementViewer")) {
+                            String timeStamp = String.valueOf(row.get(1));
+                            isAnnouncementTimestampUpdated =
+                                    timestampCompare(timeStamp, newsfeedAnnouncementTimestamp);
 
+                            newsfeedAnnouncementTimestampHolder = timeStamp;
+                        }
+                    }
 
-                    Log.v("before","before");
+                    String timeStamp = String.valueOf(row.get(8));
+
+                    if(Integer.parseInt(timeStamp)<=Integer.parseInt(newsfeedAnnouncementTimestamp))
+                        continue;
+
 
                     dId = String.valueOf(row.get(0));
 
-                    Log.v("after",dId);
 
 
 
@@ -473,50 +512,46 @@ public class t_Announcement_Viewer extends Activity
 
                     if (dId.contains("BonBlank88"))
                     {
-                        Log.v("if", dId);
-                        Log.v("if", range);
                         end = true;
 
                         continue;
                     }
 
+                    if(mode.equals("announcementViewer")) {
 
 
+                        String cataegories = String.valueOf(row.get(2));
 
 
-                    Log.v("before","before");
+                        if (cataegories.contains(dept_filter)) {
+                            if (cataegories.contains(semester_filter)) {
 
-                    String cataegories = String.valueOf(row.get(2));
+                                title = String.valueOf(row.get(0));
+                                description = String.valueOf(row.get(1));
+                                String publisherId = String.valueOf(row.get(3));//Departments
+                                fullName = String.valueOf(row.get(4));
+                                String uniqueId = String.valueOf(row.get(5));
+                                String datePublished = String.valueOf(row.get(6));
+                                String fileAttachment = String.valueOf(row.get(7));
 
-                    Log.v("after",cataegories);
+                                description = splitProtection(description);
+                                title = splitProtection(title);
+                                cataegories = splitProtection(cataegories);
+                                publisherId = splitProtection(publisherId);
+                                fullName = splitProtection(fullName);
+                                uniqueId = splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
 
 
-
-                    if(cataegories.contains(dept_filter)) {
-                        if(cataegories.contains(semester_filter)) {
-
-                            title = String.valueOf(row.get(0));
-                            description = String.valueOf(row.get(1));
-                            String publisherId = String.valueOf(row.get(3));//Departments
-                            fullName = String.valueOf(row.get(4));
-                            String uniqueId = String.valueOf(row.get(5));
-                            String datePublished = String.valueOf(row.get(6));
-                            String fileAttachment = String.valueOf(row.get(7));
-
-                            words.add(new Word(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
-                                    ,fileAttachment));
+                                newsfeedAnnouncements.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                        , fileAttachment, "ANNOUNCEMENTS", timeStamp));
+                            }
                         }
+
+
                     }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -557,13 +592,30 @@ public class t_Announcement_Viewer extends Activity
             mProgress.hide();
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
-                Log.v("t_Announcement_Viewer" , "damn");
+
             } else {
                 output.add(0, " ");
                 mOutputText.setText(TextUtils.join("\n", output));
-                Log.v("t_Announcement_Viewer" , "Wofdad21");
+
                 end = true;
-                EventList();
+
+                if(mode.equals("timestampViewer")) {
+
+                    if (isAnnouncementTimestampUpdated) {
+                        mode = "announcementViewer";
+                        getResultsFromApi();
+                    }
+                }else if(mode.equals("announcementViewer")) {
+                    retrievingDataEnd = true;
+                    if(globalDataArrayString.equals("unknown"))
+                        postEventViewerMode();
+                }
+
+                if(retrievingDataEnd) {
+                    if (isAnnouncementTimestampUpdated)
+                        postEventViewerMode();
+                }
+
 
 
             }
@@ -675,74 +727,59 @@ public class t_Announcement_Viewer extends Activity
 
 
 
+                newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+
+
+                ListView listView = (ListView) findViewById(R.id.list);
+
+
+                listView.setAdapter(adapter);
+
+                if (end) {
+
+                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                            newsfeedPublic word = words.get(position);
+
+                            //Get on clicked data
+                            String exTitle = word.getMiwokTranslation();  //Title
+                            String exDesc = word.getDefaultTranslation();  //Description
+                            String exPublishDate = word.getPublishDate(); // Cataegories
+                            String exEventDate = word.getEventDate();// Publisher Id
+                            String exFullName = word.getLastDateofRegistration(); //full name
+                            String exFees = word.getEntryFees(); // Unique Id
+                            String exLastDateofRegistation = word.getfullName(); // Publish Date
+                            String exFileAttachment = word.getFileAttachment();
 
 
 
+                            //Save Data
+                            SharedPreferences mPrefs = getSharedPreferences("label", 0);
+                            SharedPreferences.Editor mEditor = mPrefs.edit();
+                            mEditor.putString("title", exTitle).commit();
+                            mEditor.putString("desc", exDesc).commit();
+                            mEditor.putString("publishDate", exPublishDate).commit();
+                            mEditor.putString("eventDate", exEventDate).commit();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
+                            mEditor.putString("fees", exFees).commit();
+                            mEditor.putString("fullName", exFullName).commit();
+                            mEditor.putString("fileAttachment", exFileAttachment).commit();
 
 
-
-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The
-        // adapter knows how to create list items for each item in the list.
-        WordAdapter adapter = new WordAdapter(this, words);
-
-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.
-        // There should be a {@link ListView} with the view ID called list, which is declared in the
-        // activity_numbers.xml layout file.
-        ListView listView = (ListView) findViewById(R.id.list);
-
-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the
-        // {@link ListView} will display list items for each {@link Word} in the list.
-        listView.setAdapter(adapter);
-
-        if(end) {
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                    Word word = words.get(position);
-
-                    //Get on clicked data
-                    String exTitle = word.getMiwokTranslation();  //Title
-                    String exDesc = word.getDefaultTranslation();  //Description
-                    String exPublishDate = word.getPublishDate(); // Cataegories
-                    String exEventDate = word.getEventDate();// Publisher Id
-                    String exFullName = word.getLastDateofRegistration(); //full name
-                    String exFees = word.getEntryFees(); // Unique Id
-                    String exLastDateofRegistation = word.getfullName(); // Publish Date
-                    String exFileAttachment = word.getFileAttachment();
-
-                    Log.v("Hello" ,exTitle + exDesc +exFullName + exFileAttachment);
-
-                    //Save Data
-                    SharedPreferences mPrefs = getSharedPreferences("label", 0);
-                    SharedPreferences.Editor mEditor = mPrefs.edit();
-                    mEditor.putString("title", exTitle).commit();
-                    mEditor.putString("desc", exDesc).commit();
-                    mEditor.putString("publishDate", exPublishDate).commit();
-                    mEditor.putString("eventDate", exEventDate).commit();
-                    mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                    mEditor.putString("fees", exFees).commit();
-                    mEditor.putString("fullName", exFullName).commit();
-                    mEditor.putString("fileAttachment", exFileAttachment).commit();
+                            Intent selectIntent = new Intent(t_Announcement_Viewer.this, t_Detailed_Announcement.class);
+                            startActivity(selectIntent);
 
 
+                        }
 
 
-
-                    Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Detailed_Announcement.class);
-                    startActivity(selectIntent);
-
-
-
-
-
-
+                    });
                 }
+            }// End of announcementViewer mode for EventList
 
 
-            });
-        }
-    }
+
 
     public void onChangeDept(View v){
         Spinner deptSpinner = (Spinner) findViewById(R.id.spinner_dept);
@@ -942,6 +979,282 @@ public class t_Announcement_Viewer extends Activity
 
 
 
+    public String  splitProtection(String original)
+    {
+        original = original.replace(",","<comma5582>");
+        original = original.replace("%","<percent6643>");
 
+        return original;
+    }
+
+    public boolean timestampCompare(String timestampRetrieved, String timestampStored){
+
+
+        return !timestampRetrieved.equals(timestampStored);
+
+    }
+
+    public void loadDataArray(){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        Log.v("globalDataArrayString","before");
+        globalDataArrayString = mPrefs.getString("dataArray", "unknown");
+        Log.v("globalDataArrayString",globalDataArrayString);
+
+    }
+
+
+    public void postEventViewerMode()
+    {
+
+        String newsfeedAnnouncementsString;
+        newsfeedAnnouncementsString = newsfeedAnnouncements.toString().replace("[","");
+        newsfeedAnnouncementsString = newsfeedAnnouncementsString.replace("]","");
+        String storedData;
+        String dataRetrieved ="";
+        if(globalDataArrayString.equals("unknown")) {
+
+            storedData = "[";
+
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved +  newsfeedAnnouncementsString;
+
+
+        }else
+        {
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved + "," +  newsfeedAnnouncementsString;
+            storedData =  globalDataArrayString.replace("]","");
+        }
+        newsfeedAnnouncementTimestamp = newsfeedAnnouncementTimestampHolder;
+
+
+
+
+        saveTimestamps();
+
+
+
+
+        String concatenatedData =  storedData + dataRetrieved + "]";
+
+        int maxLogSize = 1000;
+        for(int i = 0; i <= concatenatedData.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = (i+1) * maxLogSize;
+            end = end > concatenatedData.length() ? concatenatedData.length() : end;
+        }
+
+
+
+        sortDataByDate(concatenatedData);
+        mProgress.hide();
+        EventList();
+
+//        hideLoading();
+
+    }
+    public void sortDataByDate(String dateRetrieved)
+    {
+        saveDataArray(dateRetrieved);
+
+
+        String trimmedString = dateRetrieved.replace("[","");
+        trimmedString = trimmedString.replace("]","");
+
+        trimmedString = trimmedString.replace(" NOTES","NOTES");
+        trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
+        trimmedString = trimmedString.replace(" EVENTS","EVENTS");
+
+
+
+        String dateArray[] = trimmedString.split(",");
+        String elementArray[];
+        String elementMode;
+
+
+
+        int i;
+
+        int latestIndex = 0;
+
+        String transferArray[] = {"hello","hello"};
+
+
+
+        words.clear();
+        for(i=0;i<dateArray.length;i++) {
+
+            String latestDate;
+
+            elementArray = dateArray[i].split("%");
+            elementMode = elementArray[0];
+
+
+
+            if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
+                latestDate = elementArray[9];
+
+            } else if (elementMode.contains("EVENTS")) {
+                latestDate = elementArray[8];
+            } else {
+                break;
+            }
+//
+
+
+            int k = i;
+
+            for (k = k; k < dateArray.length; k++) {
+                latestDate = latestDate.trim();
+                int latestTimestamp = Integer.parseInt(latestDate);
+
+
+                elementArray = dateArray[k].split("%");
+                elementMode = elementArray[0];
+                String challengeDate = "o";
+                if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
+                    challengeDate = elementArray[9];
+
+                } else if (elementMode.equals("EVENTS")) {
+                    challengeDate = elementArray[8];
+                } else {
+                    break;
+                }
+
+
+                challengeDate = challengeDate.trim();
+                int challengeTimestamp = Integer.parseInt(challengeDate);
+
+
+
+                boolean lastestDayIsPast = false;
+
+                if(challengeTimestamp >= latestTimestamp )
+                    lastestDayIsPast = true;
+
+//
+                if (lastestDayIsPast) {
+
+                    latestDate = challengeDate;
+                    latestIndex = k;
+
+                }
+
+
+
+
+            }
+
+
+
+            transferArray[0] = dateArray[i];
+            dateArray[i] = dateArray[latestIndex];
+
+            dateArray[latestIndex] = transferArray[0];
+
+
+            if(i==dateArray.length) {
+
+                elementArray = dateArray[dateArray.length - 2].split("%");
+
+            }
+            else
+            {
+                elementArray = dateArray[i].split("%");
+            }
+
+
+
+
+            elementMode = elementArray[0];
+            String element0 = splitProtectionDeactivated(elementArray[0]);
+            String element1 = splitProtectionDeactivated(elementArray[1]);
+            String element2 = splitProtectionDeactivated(elementArray[2]);
+            String element3 = splitProtectionDeactivated(elementArray[3]);
+            String element4 = splitProtectionDeactivated(elementArray[4]);
+            String element5 = splitProtectionDeactivated(elementArray[5]);
+            String element6 = splitProtectionDeactivated(elementArray[6]);
+            String element7 = splitProtectionDeactivated(elementArray[7]);
+            String element8 = splitProtectionDeactivated(elementArray[8]);
+
+
+
+            if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
+
+                String element9 = splitProtectionDeactivated(elementArray[9]);
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element8, element0,element9));
+            } else {
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element0,element8));
+            }
+
+
+        }
+
+
+
+
+
+
+    }
+    public void saveTimestamps()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).commit();
+    }
+
+
+    public void loadDataForList(){
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+//
+//        globalDepartment =  mPrefs.getString("savedDepartmentAnnouncement", "unknown");
+//        String semester = mPrefs.getString("savedSemesterAnnouncement", "default_value_if_variable_not_found");
+//        integerSemester = Integer.parseInt(semester);
+        newsfeedAnnouncementTimestamp = mPrefs.getString("savedAnnouncementTimestamp", "1521000000");
+
+
+//        if (semester.equals("1")) {
+//            sSemester = "First Semester";
+//        } else if (semester.equals("2")) {
+//            sSemester = "Second Semester";
+//        } else if (semester.equals("3")) {
+//            sSemester = "Third Semester";
+//        } else if (semester.equals("4")) {
+//            sSemester = "Fourth Semester";
+//        } else if (semester.equals("5")) {
+//            sSemester = "Fifth Semester";
+//        } else if (semester.equals("6")) {
+//            sSemester = "Sixth and Above Semesters";
+//        }
+
+    }
+
+    public void saveDataArray(String dataArray){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        Log.v("dataArray",dataArray);
+        mEditor.putString("dataArray", dataArray).commit();
+
+    }
+
+    public String  splitProtectionDeactivated(String original)
+    {
+        original = original.replace("<comma5582>",",");
+        original = original.replace("<percent6643>","%");
+
+        return original;
+    }
 
 }

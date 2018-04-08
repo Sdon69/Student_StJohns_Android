@@ -50,6 +50,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 
 import java.io.IOException;
@@ -231,11 +232,11 @@ public class Newsfeed extends Activity
             }else
 
             {
-                Log.v("globalDataArrayString","check");
+
                 loadDataArray();
                 if(!globalDataArrayString.equals("unknown"))
                 {
-                    Log.v("check","check2");
+
                     sortDataByDate(globalDataArrayString);
                     EventList();
                 }
@@ -786,7 +787,7 @@ public class Newsfeed extends Activity
 
         @Override
         protected void onPreExecute() {
-            mOutputText.setText("");
+
             showLoading();
 
 
@@ -857,15 +858,12 @@ public class Newsfeed extends Activity
                     }
                 }  else if(mode.equals("eventViewer"))
                 {
-                    Log.v("retrievingDataEnd", String.valueOf(retrievingDataEnd));
-                    retrievingDataEnd = true;
+                      retrievingDataEnd = true;
                     if(globalDataArrayString.equals("unknown"))
                         postEventViewerMode();
 
                 }
-                Log.v("EndForRetrDataEnd", String.valueOf(retrievingDataEnd));
-                Log.v("isUpdated", String.valueOf(isEventTimestampUpdated) + " " +String.valueOf(isNotesTimestampUpdated) + " " +
-                        String.valueOf(isAnnouncementTimestampUpdated) );
+
                 if(retrievingDataEnd) {
                     if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                         postEventViewerMode();
@@ -1297,11 +1295,12 @@ public class Newsfeed extends Activity
 
         String constructionBody = "lets see...";
         if(!returnedString.equals("break")) {
+            if(Integer.parseInt(returnedString)<=90) {
 
 
-
-            constructionBody = subjectSlots[subjectIndex]+ " starts in " + returnedString + " minutes";
-            generateNotification(constructionBody);
+                constructionBody = subjectSlots[subjectIndex] + " starts in " + returnedString + " minutes";
+                generateNotification(constructionBody);
+            }
 
         }
 
@@ -1531,9 +1530,15 @@ public class Newsfeed extends Activity
 
 
 
+                            if(exFileAttachment.length()>4 && exFileAttachment.length()<20) {
+                                Intent selectIntent = new Intent(Newsfeed.this, PlayActivity.class);
+                                startActivity(selectIntent);
 
-                            Intent selectIntent = new Intent(Newsfeed.this,t_Detailed_Notes.class);
-                            startActivity(selectIntent);
+                            }else
+                            {
+                                Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Notes.class);
+                                startActivity(selectIntent);
+                            }
 
 
                         }
@@ -1647,9 +1652,15 @@ public class Newsfeed extends Activity
 
 
 
+                            if(exFileAttachment.length()>4 && exFileAttachment.length()<20) {
+                                Intent selectIntent = new Intent(Newsfeed.this, PlayActivity.class);
+                                startActivity(selectIntent);
 
-                            Intent selectIntent = new Intent(Newsfeed.this,t_Detailed_Notes.class);
-                            startActivity(selectIntent);
+                            }else
+                            {
+                                Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Notes.class);
+                                startActivity(selectIntent);
+                            }
 
 
                         }
