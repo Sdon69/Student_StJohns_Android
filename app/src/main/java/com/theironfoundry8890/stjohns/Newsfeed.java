@@ -90,6 +90,10 @@ public class Newsfeed extends Activity
     private String newsfeedAnnouncementTimestamp;
     private String newsfeedEventTimestamp;
 
+    private boolean isVideoInfoViewerTimestampUpdated = false;
+    private String videoInfoViewerTimestamp;
+    private String videoInfoViewerTimestampHolder;
+
     private String timeCollection[];
 
     private String newsfeedNotesTimestampHolder;
@@ -136,14 +140,8 @@ public class Newsfeed extends Activity
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
 
-    private String dFName;
-    private String dLName;
-    private String dClass;
-    private String dEmail;
-    private String dSection;
     private String dId;
-    private String dPassword;
-    private String dPhone;
+
     private List dRow;
 
     private int dayIndex;
@@ -152,9 +150,7 @@ public class Newsfeed extends Activity
 
     private int tableNo;
     private String gSavedAnnSheetId;
-    private String savedPass;
-    private String savedId;
-    private String adapterMode;
+
 
     private String globalDepartment;
 
@@ -217,6 +213,10 @@ public class Newsfeed extends Activity
             mProgress.setCanceledOnTouchOutside(false);
 
             setContentView(activityLayout);
+            FirebaseMessaging.getInstance().subscribeToTopic("Management1");
+
+
+            setSheetIds();
 
             colorCheck();
             // Initialize credentials and service object.
@@ -521,7 +521,7 @@ public class Newsfeed extends Activity
          * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            String spreadsheetId = "116OBhXliG69OB5bKRAEwpmlOz21LCCWStniSuIR6wPI";
+            String spreadsheetId = getAnnouncementSheetId();
             int a = 2;
             idAvailcheck = true;
             String range = "Stj Teacher Notes!".concat("A"+ a++ + ":J");
@@ -543,14 +543,18 @@ public class Newsfeed extends Activity
 
             if(mode.equals("timestampViewer"))
             {
-                spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU";
+                spreadsheetId = getMiscSheetId();
                 range = "Timestamp!".concat("A"+ 2 + ":B");
             } else if(mode.equals("notesViewer")) {
-                spreadsheetId = "1UDDtel5vAFBqVnaPZIZl20SwZEz_7fxGXYQOuKLvSmQ";
+                spreadsheetId = getNoteSheetId();
             }else if(mode.equals("eventViewer"))
             {
-                spreadsheetId = "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw";
+                spreadsheetId = getEventSheetId();
                 range = "Events!".concat("A"+ 2 + ":S");
+            }else if(mode.equals("videoInfoViewer"))
+            {
+                spreadsheetId = getUploadedVideoInfoSheetId();
+                range = "videoInfo!".concat("A"+ 2 + ":I");
             }
 
 
@@ -596,10 +600,15 @@ public class Newsfeed extends Activity
                             isNotesTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedNotesTimestamp);
                             newsfeedNotesTimestampHolder = timeStamp;
-                        }
+                        }if(modeRetrieved.equals("videoInfoViewer")){
+                        String timeStamp = String.valueOf(row.get(1));
+                        isVideoInfoViewerTimestampUpdated =
+                                timestampCompare(timeStamp, videoInfoViewerTimestamp);
 
-                        Log.v("isUpdatedLooped", String.valueOf(isEventTimestampUpdated) + " " +String.valueOf(isNotesTimestampUpdated) + " " +
-                                String.valueOf(isAnnouncementTimestampUpdated) );
+                        videoInfoViewerTimestampHolder = timeStamp;
+                    }
+
+
                     }
 
 
@@ -718,6 +727,60 @@ public class Newsfeed extends Activity
 
                     }  //End of notesViewer mode
 
+                    if(mode.equals("videoInfoViewer")) {
+
+
+
+                        String timeStamp = String.valueOf(row.get(8));
+
+                        if (Integer.parseInt(timeStamp) <= Integer.parseInt(videoInfoViewerTimestamp))
+                            continue;
+
+
+
+                        dId = String.valueOf(row.get(0));
+
+                        if (dId.contains("BonBlank88"))
+                        {
+
+
+                            end = true;
+
+                            continue;
+                        }
+
+
+
+                        String cataegories = String.valueOf(row.get(2));
+
+                        if(cataegories.contains(dept_filter)) {
+                            if(cataegories.contains(semester_filter)) {
+                                title = String.valueOf(row.get(0));
+
+                                description = String.valueOf(row.get(1));
+                                String publisherId = String.valueOf(row.get(3));//Departments
+                                fullName = String.valueOf(row.get(4));
+                                String uniqueId = String.valueOf(row.get(5));
+                                String datePublished = String.valueOf(row.get(6));
+                                String fileAttachment = String.valueOf(row.get(7));
+
+                                description =  splitProtection(description);
+                                title =   splitProtection(title);
+                                cataegories =     splitProtection(cataegories);
+                                publisherId =   splitProtection(publisherId);
+                                fullName =   splitProtection(fullName);
+                                uniqueId =   splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
+
+                                newsfeedNotes.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
+                                        ,fileAttachment, "NOTES",timeStamp));
+                            }
+                        }
+
+                    }  //End of uploadedVideoInfoViewer mode
+
                     else if(mode.equals("eventViewer"))
                     {
 
@@ -804,8 +867,6 @@ public class Newsfeed extends Activity
                 mOutputText.setText("No results returned.");
 
             } else {
-                output.add(0, " ");
-                mOutputText.setText(TextUtils.join("\n", output));
 
                 end = true;
 
@@ -817,6 +878,9 @@ public class Newsfeed extends Activity
                     }else if(isNotesTimestampUpdated)
                     {
                         mode = "notesViewer";
+                        getResultsFromApi();
+                    }else if (isVideoInfoViewerTimestampUpdated) {
+                        mode = "videoInfoViewer";
                         getResultsFromApi();
                     }else if(isEventTimestampUpdated)
                     {
@@ -834,6 +898,9 @@ public class Newsfeed extends Activity
                     {
                         mode = "notesViewer";
                         getResultsFromApi();
+                    }else if (isVideoInfoViewerTimestampUpdated) {
+                        mode = "videoInfoViewer";
+                        getResultsFromApi();
                     }else if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
@@ -846,8 +913,21 @@ public class Newsfeed extends Activity
 
                 }
                 else if(mode.equals("notesViewer")) {
-
-                    if(isEventTimestampUpdated)
+                    if (isVideoInfoViewerTimestampUpdated) {
+                        mode = "videoInfoViewer";
+                        getResultsFromApi();
+                      }
+                    else if(isEventTimestampUpdated)
+                    {
+                        mode = "eventViewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        retrievingDataEnd = true;
+                        hideLoading();
+                    }
+                } else if(mode.equals("videoInfoViewer")) {
+                 if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
                         getResultsFromApi();
@@ -898,6 +978,9 @@ public class Newsfeed extends Activity
                         {
                             mode = "notesViewer";
                             getResultsFromApi();
+                        }else if (isVideoInfoViewerTimestampUpdated) {
+                            mode = "videoInfoViewer";
+                            getResultsFromApi();
                         }else if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
@@ -914,6 +997,9 @@ public class Newsfeed extends Activity
                         {
                             mode = "notesViewer";
                             getResultsFromApi();
+                        }else if (isVideoInfoViewerTimestampUpdated) {
+                            mode = "videoInfoViewer";
+                            getResultsFromApi();
                         }else if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
@@ -926,7 +1012,20 @@ public class Newsfeed extends Activity
 
                     }
                     else if(mode.equals("notesViewer")) {
-
+                        if (isVideoInfoViewerTimestampUpdated) {
+                            mode = "videoInfoViewer";
+                            getResultsFromApi();
+                        }
+                        else if(isEventTimestampUpdated)
+                        {
+                            mode = "eventViewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            retrievingDataEnd = true;
+                            hideLoading();
+                        }
+                    } else if(mode.equals("videoInfoViewer")) {
                         if(isEventTimestampUpdated)
                         {
                             mode = "eventViewer";
@@ -938,7 +1037,6 @@ public class Newsfeed extends Activity
                         }
                     }  else if(mode.equals("eventViewer"))
                     {
-
                         retrievingDataEnd = true;
                         if(globalDataArrayString.equals("unknown"))
                             postEventViewerMode();
@@ -981,6 +1079,7 @@ public class Newsfeed extends Activity
         mEditor.putString("newsfeedNotesTimestamp", newsfeedNotesTimestamp).commit();
         mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).commit();
         mEditor.putString("newsfeedEventTimestamp", newsfeedEventTimestamp).commit();
+        mEditor.putString("newsfeedVideoInfoViewerTimestamp", videoInfoViewerTimestamp).commit();
     }
 
 
@@ -995,6 +1094,7 @@ public class Newsfeed extends Activity
         newsfeedNotesTimestamp =  mPrefs.getString("newsfeedNotesTimestamp", "1521000000");
         newsfeedAnnouncementTimestamp = mPrefs.getString("newsfeedAnnouncementTimestamp", "1521000000");
         newsfeedEventTimestamp = mPrefs.getString("newsfeedEventTimestamp", "1521000000");
+        videoInfoViewerTimestamp = mPrefs.getString("newsfeedVideoInfoViewerTimestamp", "1521000000");
 
         if (semester.equals("1")) {
             sSemester = "First Semester";
@@ -1825,20 +1925,7 @@ public class Newsfeed extends Activity
 
     }
 
-    private void deviceOffline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(R.drawable.no_connection);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.content_viewer);
-        listviewer.setVisibility(View.INVISIBLE);
-    }
-    private void deviceOnline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(0);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.content_viewer);
-        listviewer.setVisibility(View.VISIBLE);
-    }
+
 
     public void loadUse()
     {
@@ -2095,6 +2182,7 @@ public class Newsfeed extends Activity
         newsfeedAnnouncementTimestamp = newsfeedAnnouncementTimestampHolder;
         newsfeedEventTimestamp = newsfeedEventTimestampHolder;
         newsfeedNotesTimestamp = newsfeedNotesTimestampHolder;
+        videoInfoViewerTimestamp = videoInfoViewerTimestampHolder;
 
 
 
@@ -2143,7 +2231,9 @@ public class Newsfeed extends Activity
     {
         original = original.replace(",","<comma5582>");
         original = original.replace("%","<percent6643>");
-
+        original = original.replace("NOTES","<notes6513>");
+        original = original.replace("ANNOUNCEMENTS","<announcements9235>");
+        original = original.replace("EVENTS","<events3321>");
         return original;
     }
 
@@ -2151,7 +2241,9 @@ public class Newsfeed extends Activity
     {
         original = original.replace("<comma5582>",",");
         original = original.replace("<percent6643>","%");
-
+        original = original.replace("<notes6513>","NOTES");
+        original = original.replace("<announcements9235>","ANNOUNCEMENTS");
+        original = original.replace("<events3321>","EVENTS");
         return original;
     }
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -2172,7 +2264,6 @@ public class Newsfeed extends Activity
     public String calculateTimeLeft(String timeSlots, boolean intial, boolean limit)
     {
         int indexNo = 0;
-
         String timeDivide []  = timeSlots.split("-");
         String periodEnd = timeDivide[indexNo].trim();
         String periodEndTime[] = periodEnd.split(":");
@@ -2241,6 +2332,67 @@ public class Newsfeed extends Activity
         }
     };
 
+    public void setSheetIds()
+    {
+        String mode = "test";
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        if(mode.equals("test")) {
+            mEditor.putString("eventSheetId", "1tFhDy9sR9dlJ0jwNbqbcq3TnFpViMHJOi2xeOv_Wqqw").apply();
+            mEditor.putString("notesSheetId", "1pAZtRVUuQFuGoUiWjiZRwXbrfju3ZcJgR0Lq6mBmmW0").apply();
+            mEditor.putString("announcementSheetId", "1P0iFk6F9AHddLOM4N_8NbMVVByz671rbzDikJIbcsS0").apply();
+            mEditor.putString("miscSheetId", "10PpNnvF4j5GNlbGrP4vPoPV8pQhix_9JP5kK9zlQDmY").apply();
+            mEditor.putString("uploadedVideoInfoSheetId", "12C3ceqz_Fr7GmXpLxt-n4iMhbr86yluGqT4fno_CW-8").apply();
+        }else if(mode.equals("release"))
+        {
+            mEditor.putString("eventSheetId", "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw").apply();
+            mEditor.putString("notesSheetId", "1UDDtel5vAFBqVnaPZIZl20SwZEz_7fxGXYQOuKLvSmQ").apply();
+            mEditor.putString("announcementSheetId", "116OBhXliG69OB5bKRAEwpmlOz21LCCWStniSuIR6wPI").apply();
+            mEditor.putString("miscSheetId", "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU  ").apply();
+            mEditor.putString("uploadedVideoInfoSheetId", "12C3ceqz_Fr7GmXpLxt-n4iMhbr86yluGqT4fno_CW-8").apply();
+        }
+
+
+
+    }
+
+    public String  getEventSheetId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        return mPrefs.getString("eventSheetId", "default_value_if_variable_not_found");
+    }
+
+    public String  getAnnouncementSheetId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        return mPrefs.getString("announcementSheetId", "default_value_if_variable_not_found");
+    }
+
+    public String  getNoteSheetId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        return mPrefs.getString("notesSheetId", "default_value_if_variable_not_found");
+
+    }
+
+    public String  getMiscSheetId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        return mPrefs.getString("miscSheetId", "default_value_if_variable_not_found");
+    }
+
+    public String getUploadedVideoInfoSheetId()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        return mPrefs.getString("uploadedVideoInfoSheetId", "default_value_if_variable_not_found");
+    }
 
 
 
