@@ -171,59 +171,7 @@ public class t_Detailed_Announcement extends AppCompatActivity {
     }
 
 
-    private void swipe() {
 
-        TextView head2 = (TextView) findViewById(R.id.head2);
-        TextView head1 = (TextView) findViewById(R.id.head);
-
-        Button button1 = (Button) findViewById(R.id.Button1);
-        Button button2 = (Button) findViewById(R.id.Button2);
-        Button button3 = (Button) findViewById(R.id.Button3);
-
-
-
-        if(a==0){
-
-            Intent selectIntent = new Intent(t_Detailed_Announcement.this,feedbackWriter.class);
-            startActivity(selectIntent);
-
-        }
-
-
-        if(a==1) {
-
-            Intent selectIntent = new Intent(t_Detailed_Announcement.this,t_Announcement_Viewer.class);
-            startActivity(selectIntent);
-
-
-        }
-
-        if(a==2) {
-            Intent selectIntent = new Intent(t_Detailed_Announcement.this,t_notes_Viewer.class);
-            startActivity(selectIntent);
-        }
-
-        if(a==3) {
-            Intent selectIntent = new Intent(t_Detailed_Announcement.this,EventViewer.class);
-            startActivity(selectIntent);
-
-        }
-
-        if(a==4){
-            Intent selectIntent = new Intent(t_Detailed_Announcement.this,Newsfeed.class);
-            startActivity(selectIntent);
-
-        }
-
-
-
-
-
-
-
-
-
-    }
 
 
 

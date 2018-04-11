@@ -17,6 +17,7 @@
 package com.theironfoundry8890.stjohns;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -33,9 +34,12 @@ import java.net.URL;
 // implementation see: https://developers.google.com/cloud-messaging/server
 public class GcmSender {
 
-    public static final String API_KEY = "API_KEY";
 
-    public static void main(String[] args) {
+
+    public static final String API_KEY =
+            "AIzaSyBiMEkE8cH486GCvWn1SjxG30TFKg4K2qI";
+
+    protected static void doInBackground(String[] args) {
         if (args.length < 1 || args.length > 2 || args[0] == null) {
             System.err.println("usage: ./gradlew run -Pmsg=\"MESSAGE\" [-Pto=\"DEVICE_TOKEN\"]");
             System.err.println("");
@@ -56,18 +60,34 @@ public class GcmSender {
             // Prepare JSON containing the GCM message content. What to send and where to send.
             JSONObject jGcmData = new JSONObject();
             JSONObject jData = new JSONObject();
-            jData.put("message", args[0].trim());
+            try {
+                jData.put("message", args[0].trim());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             // Where to send GCM message.
             if (args.length > 1 && args[1] != null) {
-                jGcmData.put("to", args[1].trim());
+                try {
+                    jGcmData.put("to", args[1].trim());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             } else {
-                jGcmData.put("to", "/topics/global");
+                try {
+                    jGcmData.put("to", "/topics/global");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
             // What to send in GCM message.
-            jGcmData.put("data", jData);
+            try {
+                jGcmData.put("data", jData);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
             // Create connection to send GCM Message request.
-            URL url = new URL("https://android.googleapis.com/gcm/send");
+            URL url = new URL("https://fcm.googleapis.com/v1/project/ethereal-cache-197910/messages:send HTTP/1.1");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestProperty("Authorization", "key=" + API_KEY);
             conn.setRequestProperty("Content-Type", "application/json");

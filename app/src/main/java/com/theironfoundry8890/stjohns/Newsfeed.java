@@ -18,12 +18,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
-import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -41,6 +39,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
@@ -48,14 +47,22 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
+import com.google.gson.Gson;
 import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.text.DateFormat;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -213,7 +220,9 @@ public class Newsfeed extends Activity
             mProgress.setCanceledOnTouchOutside(false);
 
             setContentView(activityLayout);
-            FirebaseMessaging.getInstance().subscribeToTopic("Management1");
+
+
+            send_firebase_notification.sendGcmMessage("title1349","1350");
 
 
             setSheetIds();
@@ -1110,12 +1119,18 @@ public class Newsfeed extends Activity
             sSemester = "Sixth and Above Semesters";
         }
 
+       boolean firebaseSubscribed = mPrefs.getBoolean("firebaseSubscribed", false);
 
-
-        //tableDetails
-        tableNo = mPrefs.getInt("tableNo", 1);
-        String AnnSheetId = mPrefs.getString("AnnSheetId", "1OKiX0QWm2VerdWhuLPF1NIoTEOXHpBFo9qNPgu9HH7Y");
-        gSavedAnnSheetId = AnnSheetId;
+        if(!firebaseSubscribed)
+        {
+            if(!sDepartment.equals("unknown"))
+            {
+                FirebaseMessaging.getInstance().subscribeToTopic(sDepartment+semester);
+                FirebaseMessaging.getInstance().subscribeToTopic("global");
+                SharedPreferences.Editor mEditor = mPrefs.edit();
+                mEditor.putBoolean("firebaseSubscribed", true).apply();
+            }
+        }
 
 
 
@@ -1973,6 +1988,9 @@ public class Newsfeed extends Activity
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
         mEditor.putString("Department", globalDepartment).commit();
+        FirebaseMessaging.getInstance().subscribeToTopic("global");
+        FirebaseMessaging.getInstance().subscribeToTopic(globalDepartment+integerSemester);
+        mEditor.putBoolean("firebaseSubscribed", true).apply();
 
     }
     public void saveDataArray(String dataArray){
@@ -2385,6 +2403,7 @@ public class Newsfeed extends Activity
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
 
         return mPrefs.getString("miscSheetId", "default_value_if_variable_not_found");
+
     }
 
     public String getUploadedVideoInfoSheetId()
@@ -2395,5 +2414,106 @@ public class Newsfeed extends Activity
     }
 
 
-
+//public void sendGcmMessage(String messageTitle,String messageBody)
+//{
+//    messageTitle =   messageTitle.replace("<comma3384>",".");
+//    messageBody =   messageBody.replace("<comma3384>",".");
+//        String envelope = messageTitle + "<comma3384>"  + messageBody;
+//
+//        new RetrieveFeedTask().execute(envelope);
+//
+//
+//
+//}
+//
+//
+//    class RetrieveFeedTask extends AsyncTask<String, Void, String> {
+//
+//        private Exception exception;
+//
+//
+//        protected String doInBackground(String[] args) {
+//
+//            if (args.length < 1 || args.length > 2 || args[0] == null) {
+//                System.err.println("usage: ./gradlew run -Pmsg=\"MESSAGE\" [-Pto=\"DEVICE_TOKEN\"]");
+//                System.err.println("");
+//                System.err.println("Specify a test message to broadcast via GCM. If a device's GCM registration token is\n" +
+//                        "specified, the message will only be sent to that device. Otherwise, the message \n" +
+//                        "will be sent to all devices subscribed to the \"global\" topic.");
+//                System.err.println("");
+//                System.err.println("Example (Broadcast):\n" +
+//                        "On Windows:   .\\gradlew.bat run -Pmsg=\"<Your_Message>\"\n" +
+//                        "On Linux/Mac: ./gradlew run -Pmsg=\"<Your_Message>\"");
+//                System.err.println("");
+//                System.err.println("Example (Unicast):\n" +
+//                        "On Windows:   .\\gradlew.bat run -Pmsg=\"<Your_Message>\" -Pto=\"<Your_Token>\"\n" +
+//                        "On Linux/Mac: ./gradlew run -Pmsg=\"<Your_Message>\" -Pto=\"<Your_Token>\"");
+//                System.exit(1);
+//            }
+//            try {
+//                // Prepare JSON containing the GCM message content. What to send and where to send.
+//                JSONObject jGcmData = new JSONObject();
+//                JSONObject jData = new JSONObject();
+//                try {
+//                    jData.put("message", args[0].trim());
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                // Where to send GCM message.
+//                if (args.length > 1 && args[1] != null) {
+//                    try {
+//                        jGcmData.put("to", args[1].trim());
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    try {
+//                        jGcmData.put("to", "/topics/Management1");
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                // What to send in GCM message.
+//                try {
+//                    jGcmData.put("data", jData);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                // Create connection to send GCM Message request.
+//                URL url = new URL("https://fcm.googleapis.com/fcm/send");
+//                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//                conn.setRequestProperty("Authorization", "key=" + "AIzaSyDhyP7p8FDixgOyGy0KdbHMXRRFCvaXpWc");
+//                conn.setRequestProperty("Content-Type", "application/json");
+//                conn.setRequestMethod("POST");
+//                conn.setDoOutput(true);
+//
+//                // Send GCM message content.
+//                OutputStream outputStream = conn.getOutputStream();
+//                Log.v("OutputStream", String.valueOf(conn));
+//                String jgcm = jGcmData.toString();
+//                 jgcm = jGcmData.toString().replace("\\","");
+//                Log.v("jGcmData",jgcm);
+//                outputStream.write(jgcm.getBytes());
+//
+//                // Read GCM response.
+//                InputStream inputStream = conn.getInputStream();
+//                String resp = IOUtils.toString(inputStream);
+//                System.out.println(resp);
+//                System.out.println("Check your device/emulator for notification or logcat for " +
+//                        "confirmation of the receipt of the GCM message.");
+//            } catch (IOException e) {
+//                System.out.println("Unable to send GCM message.");
+//                System.out.println("Please ensure that API_KEY has been replaced by the server " +
+//                        "API key, and that the device's registration token is correct (if specified).");
+//                e.printStackTrace();
+//            }
+//            return args[0];
+//        }
+//        protected void onPostExecute(String feed) {
+//
+//            Log.v("postfeed",feed);
+//
+//        }
+//    }
 }
