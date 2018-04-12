@@ -1085,10 +1085,10 @@ public class Newsfeed extends Activity
     {
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("newsfeedNotesTimestamp", newsfeedNotesTimestamp).commit();
-        mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).commit();
-        mEditor.putString("newsfeedEventTimestamp", newsfeedEventTimestamp).commit();
-        mEditor.putString("newsfeedVideoInfoViewerTimestamp", videoInfoViewerTimestamp).commit();
+        mEditor.putString("newsfeedNotesTimestamp", newsfeedNotesTimestamp).apply();
+        mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).apply();
+        mEditor.putString("newsfeedEventTimestamp", newsfeedEventTimestamp).apply();
+        mEditor.putString("newsfeedVideoInfoViewerTimestamp", videoInfoViewerTimestamp).apply();
     }
 
 
@@ -1464,14 +1464,14 @@ public class Newsfeed extends Activity
                         //Save Data
                         SharedPreferences mPrefs = getSharedPreferences("label", 0);
                         SharedPreferences.Editor mEditor = mPrefs.edit();
-                        mEditor.putString("title", exTitle).commit();
-                        mEditor.putString("desc", exDesc).commit();
-                        mEditor.putString("publishDate", exPublishDate).commit();
-                        mEditor.putString("eventDate", exEventDate).commit();
-                        mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                        mEditor.putString("fees", exFees).commit();
-                        mEditor.putString("fullName", exFullName).commit();
-                        mEditor.putString("fileAttachment", exFileAttachment).commit();
+                        mEditor.putString("title", exTitle).apply();
+                        mEditor.putString("desc", exDesc).apply();
+                        mEditor.putString("publishDate", exPublishDate).apply();
+                        mEditor.putString("eventDate", exEventDate).apply();
+                        mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                        mEditor.putString("fees", exFees).apply();
+                        mEditor.putString("fullName", exFullName).apply();
+                        mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
                         Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Announcement.class);
@@ -1520,10 +1520,10 @@ public class Newsfeed extends Activity
                         //Save Data
                         SharedPreferences mPrefs = getSharedPreferences("label", 0);
                         SharedPreferences.Editor mEditor = mPrefs.edit();
-                        mEditor.putString("title", exTitle).commit();
-                        mEditor.putString("desc", exDesc).commit();
-                        mEditor.putString("fullName", exFullName).commit();
-                        mEditor.putString("fileAttachment", exFileAttachment).commit();
+                        mEditor.putString("title", exTitle).apply();
+                        mEditor.putString("desc", exDesc).apply();
+                        mEditor.putString("fullName", exFullName).apply();
+                        mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
 
@@ -1578,13 +1578,13 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("publishDate", exPublishDate).commit();
-                            mEditor.putString("eventDate", exEventDate).commit();
-                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                            mEditor.putString("fees", exFees).commit();
-                            mEditor.putString("fullName", exFullName).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("publishDate", exPublishDate).apply();
+                            mEditor.putString("eventDate", exEventDate).apply();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                            mEditor.putString("fees", exFees).apply();
+                            mEditor.putString("fullName", exFullName).apply();
 
 
                             Intent selectIntent = new Intent(Newsfeed.this, DetailedEvent.class);
@@ -1607,14 +1607,14 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("publishDate", exPublishDate).commit();
-                            mEditor.putString("eventDate", exEventDate).commit();
-                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                            mEditor.putString("fees", exFees).commit();
-                            mEditor.putString("fullName", exFullName).commit();
-                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("publishDate", exPublishDate).apply();
+                            mEditor.putString("eventDate", exEventDate).apply();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                            mEditor.putString("fees", exFees).apply();
+                            mEditor.putString("fullName", exFullName).apply();
+                            mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
                             Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Announcement.class);
@@ -1637,10 +1637,10 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("fullName", exFullName).commit();
-                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("fullName", exFullName).apply();
+                            mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
 
@@ -1700,13 +1700,13 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("publishDate", exPublishDate).commit();
-                            mEditor.putString("eventDate", exEventDate).commit();
-                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                            mEditor.putString("fees", exFees).commit();
-                            mEditor.putString("fullName", exFullName).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("publishDate", exPublishDate).apply();
+                            mEditor.putString("eventDate", exEventDate).apply();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                            mEditor.putString("fees", exFees).apply();
+                            mEditor.putString("fullName", exFullName).apply();
 
 
                             Intent selectIntent = new Intent(Newsfeed.this, DetailedEvent.class);
@@ -1729,14 +1729,14 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("publishDate", exPublishDate).commit();
-                            mEditor.putString("eventDate", exEventDate).commit();
-                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                            mEditor.putString("fees", exFees).commit();
-                            mEditor.putString("fullName", exFullName).commit();
-                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("publishDate", exPublishDate).apply();
+                            mEditor.putString("eventDate", exEventDate).apply();
+                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                            mEditor.putString("fees", exFees).apply();
+                            mEditor.putString("fullName", exFullName).apply();
+                            mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
                             Intent selectIntent = new Intent(Newsfeed.this, t_Detailed_Announcement.class);
@@ -1759,10 +1759,10 @@ public class Newsfeed extends Activity
                             //Save Data
                             SharedPreferences mPrefs = getSharedPreferences("label", 0);
                             SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("fullName", exFullName).commit();
-                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+                            mEditor.putString("title", exTitle).apply();
+                            mEditor.putString("desc", exDesc).apply();
+                            mEditor.putString("fullName", exFullName).apply();
+                            mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
 
@@ -1987,7 +1987,7 @@ public class Newsfeed extends Activity
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
-        mEditor.putString("Department", globalDepartment).commit();
+        mEditor.putString("Department", globalDepartment).apply();
         FirebaseMessaging.getInstance().subscribeToTopic("global");
         FirebaseMessaging.getInstance().subscribeToTopic(globalDepartment+integerSemester);
         mEditor.putBoolean("firebaseSubscribed", true).apply();
@@ -1999,7 +1999,7 @@ public class Newsfeed extends Activity
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
         Log.v("dataArray",dataArray);
-        mEditor.putString("dataArray", dataArray).commit();
+        mEditor.putString("dataArray", dataArray).apply();
 
     }
 
@@ -2362,7 +2362,7 @@ public class Newsfeed extends Activity
             mEditor.putString("notesSheetId", "1pAZtRVUuQFuGoUiWjiZRwXbrfju3ZcJgR0Lq6mBmmW0").apply();
             mEditor.putString("announcementSheetId", "1P0iFk6F9AHddLOM4N_8NbMVVByz671rbzDikJIbcsS0").apply();
             mEditor.putString("miscSheetId", "10PpNnvF4j5GNlbGrP4vPoPV8pQhix_9JP5kK9zlQDmY").apply();
-            mEditor.putString("uploadedVideoInfoSheetId", "12C3ceqz_Fr7GmXpLxt-n4iMhbr86yluGqT4fno_CW-8").apply();
+            mEditor.putString("uploadedVideoInfoSheetId", "17o0GpXwWZskawufsMj-iH8wdbFx_2HZ6Jfjtc1JjjfU").apply();
         }else if(mode.equals("release"))
         {
             mEditor.putString("eventSheetId", "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw").apply();

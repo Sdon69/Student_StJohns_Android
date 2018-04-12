@@ -186,7 +186,7 @@ public class t_Signin extends Activity
                 SharedPreferences mPrefs = getSharedPreferences("label", 0);
                 SharedPreferences.Editor mEditor = mPrefs.edit();
 
-                mEditor.putString("account", accountName).commit();
+                mEditor.putString("account", accountName).apply();
                 getResultsFromApi();
             } else {
                 // Start a dialog from which the user can choose an account
@@ -665,29 +665,29 @@ public class t_Signin extends Activity
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
 
-        mEditor.putString("ttag", sId).commit();
+        mEditor.putString("ttag", sId).apply();
 
-        mEditor.putString("tpass", sPassword).commit();
+        mEditor.putString("tpass", sPassword).apply();
 
         //First Name
-        mEditor.putString("tFirstName", dFName).commit();
+        mEditor.putString("tFirstName", dFName).apply();
 
         // Last Name
-        mEditor.putString("tLastName", dLName).commit();
+        mEditor.putString("tLastName", dLName).apply();
 
 
 
         //Phone No
-        mEditor.putString("tPhone", dPhone).commit();
+        mEditor.putString("tPhone", dPhone).apply();
 
         //Email
-        mEditor.putString("tEmail", dEmail).commit();
+        mEditor.putString("tEmail", dEmail).apply();
 
 
-        mEditor.putString("table" , dTable).commit();
+        mEditor.putString("table" , dTable).apply();
 
         //Saving Signed in before or not
-        mEditor.putBoolean("tVirgin" , sVirginity).commit();
+        mEditor.putBoolean("tVirgin" , sVirginity).apply();
 
 
         Log.v("Saved data" , sPassword);

@@ -683,28 +683,28 @@ public class t_SignUp extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("ttag", sId).commit();
-        mEditor.putString("tpass", sPassword).commit();
+        mEditor.putString("ttag", sId).apply();
+        mEditor.putString("tpass", sPassword).apply();
 
         //First Name
-        mEditor.putString("tFirstName", sFName).commit();
+        mEditor.putString("tFirstName", sFName).apply();
 
         // Last Name
-        mEditor.putString("tLastName", sLName).commit();
+        mEditor.putString("tLastName", sLName).apply();
 
 
 
         //Phone No
-        mEditor.putString("tPhone", sPhone).commit();
+        mEditor.putString("tPhone", sPhone).apply();
 
         //Email
-        mEditor.putString("tEmail", sEmail).commit();
+        mEditor.putString("tEmail", sEmail).apply();
 
 
 
 
         //Saving Signed in before or not
-        mEditor.putBoolean("tVirgin" , sVirginity).commit();
+        mEditor.putBoolean("tVirgin" , sVirginity).apply();
 
 
         Intent selectIntent = new Intent(t_SignUp.this,Newsfeed.class);

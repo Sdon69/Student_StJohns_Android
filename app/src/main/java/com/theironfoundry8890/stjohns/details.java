@@ -243,7 +243,7 @@ public class details extends Activity
 
                         userId = accountName;
                         //save User Email Id
-                        SharedPreferences mPrefs = getSharedPreferences("label", 0);SharedPreferences.Editor mEditor = mPrefs.edit();mEditor.putString("UserId", userId).commit();
+                        SharedPreferences mPrefs = getSharedPreferences("label", 0);SharedPreferences.Editor mEditor = mPrefs.edit();mEditor.putString("UserId", userId).apply();
 
                         SharedPreferences settings =
                                 getPreferences(Context.MODE_PRIVATE);
@@ -947,37 +947,37 @@ public class details extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
-        mEditor.putString("pass", sPassword).commit();
+        mEditor.putString("tag", sId).apply();
+        mEditor.putString("pass", sPassword).apply();
 
 
 
         //First Name
-        mEditor.putString("FirstName", sFName).commit();
+        mEditor.putString("FirstName", sFName).apply();
 
         // Last Name
-        mEditor.putString("LastName", sLName).commit();
+        mEditor.putString("LastName", sLName).apply();
 
         //Section
-        mEditor.putString("Section", sSection).commit();
+        mEditor.putString("Section", sSection).apply();
 
         //Class
-        mEditor.putString("Class", sClass).commit();
+        mEditor.putString("Class", sClass).apply();
 
         //Phone No
-        mEditor.putString("Phone", sPhone).commit();
+        mEditor.putString("Phone", sPhone).apply();
 
         //Email
-        mEditor.putString("Email", sEmail).commit();
+        mEditor.putString("Email", sEmail).apply();
 
         mEditor.putString("Department",sDepartment);
 
-        mEditor.putString("Semester", sSemester ).commit();
+        mEditor.putString("Semester", sSemester ).apply();
 
 
         boolean use = false;
 
-        mEditor.putBoolean("firstUse", use).commit();
+        mEditor.putBoolean("firstUse", use).apply();
 
 
 

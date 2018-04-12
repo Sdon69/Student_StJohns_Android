@@ -18,12 +18,14 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,18 +43,19 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.gson.Gson;
 import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static android.R.attr.value;
-import static com.theironfoundry8890.stjohns.R.id.department_layout;
 import static com.theironfoundry8890.stjohns.R.id.pass;
 
 public class t_notes_Viewer extends Activity
@@ -70,6 +73,7 @@ public class t_notes_Viewer extends Activity
     private TextView mOutputText;
     private String sPassword;private String userId;
     private boolean idAvailcheck = true;
+    private ListView  listViewGlobal;
 
     private String fullName;
 
@@ -82,27 +86,32 @@ public class t_notes_Viewer extends Activity
 
     private String title;
     private String description;
-    private String publishDate;
-    private String eventDate;
-    private String publishId;
-    private String departments;
 
-    private String lastDateofRegistration;
-    private String fees;
-    final ArrayList<Word> words = new ArrayList<Word>();
+
+    private String mode = "timestampViewer" ;
+    private boolean isViewerTimestampUpdated = false;
+
+
+    private String globalDataArrayString;
+    private boolean retrievingDataEnd = false;
+    private String viewerTimestamp;
+
+    private String viewerTimestampHolder;
+
+    private boolean isVideoInfoViewerTimestampUpdated = false;
+    private String videoInfoViewerTimestamp;
+    private String videoInfoViewerTimestampHolder;
+
+    final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> viewerArrayList = new ArrayList<newsfeedPublic>();
+
 
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
 
-    private String dFName;
-    private String dLName;
-    private String dClass;
-    private String dEmail;
-    private String dSection;
     private String dId;
-    private String dPassword;
-    private String dPhone;
-    private List dRow;
+
+
 
     private boolean end = true;
 
@@ -161,35 +170,6 @@ public class t_notes_Viewer extends Activity
         mProgress.setCanceledOnTouchOutside(false);
         setContentView(activityLayout);
 
-//        Spinner departmentSpinner;
-//        ArrayAdapter<String> yourAdapter;
-//
-//        departmentSpinner = (Spinner) findViewById(R.id.spinner_dept);
-//        ArrayList<String> array = new ArrayList<String>();
-//        array.add("All Departments");
-//        array.add("Art");
-//        array.add("Commerce");
-//        array.add("Management");
-//        array.add("Education");
-//        array.add("Science");
-//        array.add("Other Subjects");
-//
-//        yourAdapter= new ArrayAdapter<String>(this, R.layout.spinner_item, array);
-//        departmentSpinner.setAdapter(yourAdapter);
-//        ArrayList<String> semesterArray = new ArrayList<String>();
-//
-//        semesterArray.add("All Semesters");
-//        semesterArray.add("First Semester");
-//        semesterArray.add("Second Semester");
-//        semesterArray.add("Third Semester");
-//        semesterArray.add("Fourth Semester");
-//        semesterArray.add("Fifth Semester");
-//        semesterArray.add("Sixth and Above Semesters");
-//
-//
-//        yourAdapter= new ArrayAdapter<String>(this, R.layout.spinner_item, semesterArray);
-//        Spinner semesterSpinner = (Spinner) findViewById(R.id.spinner_semesters);
-//        semesterSpinner.setAdapter(yourAdapter);
         colorCheck();
 
         // Initialize credentials and service object.
@@ -197,6 +177,17 @@ public class t_notes_Viewer extends Activity
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         loadData();
+        loadDataArray();
+
+
+        loadDataForList();
+        if(!globalDataArrayString.equals("unknown"))
+        {
+
+            sortDataByDate(globalDataArrayString);
+            EventList();
+        }
+        getResultsFromApi();
 
     }
 
@@ -246,7 +237,7 @@ public class t_notes_Viewer extends Activity
 
             } else {
                 // Start a dialog from which the user can choose an account
-                Log.v("Google Accounts","Selected Account");
+
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);
@@ -371,7 +362,7 @@ public class t_notes_Viewer extends Activity
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(this);
-
+        Log.v("t_notes_Viewer" , "Success");
         return connectionStatusCode == ConnectionResult.SUCCESS;
 
     }
@@ -446,17 +437,17 @@ public class t_notes_Viewer extends Activity
          * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            String spreadsheetId = "1UDDtel5vAFBqVnaPZIZl20SwZEz_7fxGXYQOuKLvSmQ";
+            String spreadsheetId = sheetsIdCollection.getNoteSheetId();  //1UDDtel5vAFBqVnaPZIZl20SwZEz_7fxGXYQOuKLvSmQ
             int a = 2;
             idAvailcheck = true;
             String range = "Stj Teacher Notes!".concat("A"+ a++ + ":I");
             end = false;
 
-            List<List<Object>> arrData = getData(title,description );
+
 
             ValueRange oRange = new ValueRange();
             oRange.setRange(range); // I NEED THE NUMBER OF THE LAST ROW
-            oRange.setValues(arrData);
+
 
 
             List<ValueRange> oList = new ArrayList<>();
@@ -468,7 +459,15 @@ public class t_notes_Viewer extends Activity
             oRequest.setData(oList);
 
 
-
+            if(mode.equals("timestampViewer"))
+            {
+                spreadsheetId= sheetsIdCollection.getMiscSheetId(); //1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU
+                range = "Timestamp!".concat("A"+ 2 + ":B");
+            }else if(mode.equals("videoInfoViewer"))
+            {
+                spreadsheetId = sheetsIdCollection.getUploadedVideoInfoSheetId();
+                range = "videoInfo!".concat("A"+ 2 + ":I");
+            }
 
 
 
@@ -479,63 +478,128 @@ public class t_notes_Viewer extends Activity
                     .execute();
             List<List<Object>> values = response.getValues();
             if (values != null) {
-
+                Log.v("MainActivity", "Wofdad");
 
                 results.add("");
 
 
                 for (List row : values) {
 
+                    if(mode.equals("timestampViewer")) {
+                        String modeRetrieved = String.valueOf(row.get(0));
 
+                        if (modeRetrieved.equals("notesViewer")) {
+                            String timeStamp = String.valueOf(row.get(1));
+                            isViewerTimestampUpdated =
+                                    timestampCompare(timeStamp, viewerTimestamp);
 
+                            viewerTimestampHolder = timeStamp;
+                        }else if(modeRetrieved.equals("videoInfoViewer")){
+                            String timeStamp = String.valueOf(row.get(1));
+                            isVideoInfoViewerTimestampUpdated =
+                                    timestampCompare(timeStamp, videoInfoViewerTimestamp);
 
-
-                    dId = String.valueOf(row.get(0));
-
-                    if (dId.contains("BonBlank88"))
-                    {
-
-                        end = true;
-
-                        continue;
-                    }
-
-
-
-
-
-
-
-
-
-
-                    String cataegories = String.valueOf(row.get(2));
-
-
-
-
-                    if(cataegories.contains(dept_filter)) {
-                        if(cataegories.contains(semester_filter)) {
-                            title = String.valueOf(row.get(0));
-                            description = String.valueOf(row.get(1));
-                            String publisherId = String.valueOf(row.get(3));//Departments
-                            fullName = String.valueOf(row.get(4));
-                            String uniqueId = String.valueOf(row.get(5));
-                            String datePublished = String.valueOf(row.get(6));
-                            String fileAttachment = String.valueOf(row.get(7));
-
-                            words.add(new Word(description, title, cataegories, publisherId, fullName, uniqueId,datePublished
-                                    ,fileAttachment));
+                            videoInfoViewerTimestampHolder = timeStamp;
                         }
+                    }else if(mode.equals("viewer")) {
+
+                        String timeStamp = String.valueOf(row.get(8));
+
+                        if (Integer.parseInt(timeStamp) <= Integer.parseInt(viewerTimestamp))
+                            continue;
+
+
+                        dId = String.valueOf(row.get(0));
+
+                        if (dId.contains("BonBlank88")) {
+
+                            end = true;
+
+                            continue;
+                        }
+
+
+                        String cataegories = String.valueOf(row.get(2));
+
+
+                        if (cataegories.contains(dept_filter)) {
+                            if (cataegories.contains(semester_filter)) {
+                                title = String.valueOf(row.get(0));
+                                description = String.valueOf(row.get(1));
+                                String publisherId = String.valueOf(row.get(3));//Departments
+                                fullName = String.valueOf(row.get(4));
+                                String uniqueId = String.valueOf(row.get(5));
+                                String datePublished = String.valueOf(row.get(6));
+                                String fileAttachment = String.valueOf(row.get(7));
+
+
+                                description = splitProtection(description);
+                                title = splitProtection(title);
+                                cataegories = splitProtection(cataegories);
+                                publisherId = splitProtection(publisherId);
+                                fullName = splitProtection(fullName);
+                                uniqueId = splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
+
+
+                                viewerArrayList.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                        , fileAttachment, "NOTES", timeStamp));
+                            }
+                        }
+
+
+                    }else if(mode.equals("videoInfoViewer")) {
+
+                        String timeStamp = String.valueOf(row.get(8));
+
+                        if (Integer.parseInt(timeStamp) <= Integer.parseInt(videoInfoViewerTimestamp))
+                            continue;
+
+
+                        dId = String.valueOf(row.get(0));
+
+                        if (dId.contains("BonBlank88")) {
+
+                            end = true;
+
+                            continue;
+                        }
+
+
+                        String cataegories = String.valueOf(row.get(2));
+
+
+                        if (cataegories.contains(dept_filter)) {
+                            if (cataegories.contains(semester_filter)) {
+                                title = String.valueOf(row.get(0));
+                                description = String.valueOf(row.get(1));
+                                String publisherId = String.valueOf(row.get(3));//Departments
+                                fullName = String.valueOf(row.get(4));
+                                String uniqueId = String.valueOf(row.get(5));
+                                String datePublished = String.valueOf(row.get(6));
+                                String fileAttachment = String.valueOf(row.get(7));
+
+
+                                description = splitProtection(description);
+                                title = splitProtection(title);
+                                cataegories = splitProtection(cataegories);
+                                publisherId = splitProtection(publisherId);
+                                fullName = splitProtection(fullName);
+                                uniqueId = splitProtection(uniqueId);
+                                datePublished = splitProtection(datePublished);
+                                fileAttachment = splitProtection(fileAttachment);
+                                timeStamp = splitProtection(timeStamp);
+
+
+                                viewerArrayList.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                        , fileAttachment, "NOTES", timeStamp));
+                            }
+                        }
+
+
                     }
-
-
-
-
-
-
-
-
 
 
 
@@ -544,6 +608,7 @@ public class t_notes_Viewer extends Activity
 
 
                 }
+
 
 
 
@@ -565,8 +630,8 @@ public class t_notes_Viewer extends Activity
         @Override
         protected void onPreExecute() {
             mOutputText.setText("");
-            mProgress.show();
-
+            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+            loadingCircle.setVisibility(View.VISIBLE);
 
         }
 
@@ -577,15 +642,46 @@ public class t_notes_Viewer extends Activity
             mProgress.hide();
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
-
+                Log.v("t_notes_Viewer" , "damn");
             } else {
-                output.add(0, " ");
-                mOutputText.setText(TextUtils.join("\n", output));
+
 
                 end = true;
+
+                if(mode.equals("timestampViewer")) {
+
+
+                    if (isVideoInfoViewerTimestampUpdated) {
+                        mode = "videoInfoViewer";
+                        getResultsFromApi();
+                    }else  if (isViewerTimestampUpdated) {
+                        mode = "viewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        EventList();
+                        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                        loadingCircle.setVisibility(View.GONE);
+                    }
+                }else if(mode.equals("viewer")) {
+                    retrievingDataEnd = true;
+                    if(globalDataArrayString.equals("unknown"))
+                        postViewerMode();
+                }else if(mode.equals("videoInfoViewer"))
+                {
+                    if (isViewerTimestampUpdated) {
+                        mode = "viewer";
+                        getResultsFromApi();
+                    }else{
+                        retrievingDataEnd = true;
+                    }
+                }
+
+                if(retrievingDataEnd) {
+                    if (isViewerTimestampUpdated || isVideoInfoViewerTimestampUpdated )
+                        postViewerMode();
+                }
                 EventList();
-
-
             }
         }
 
@@ -603,10 +699,45 @@ public class t_notes_Viewer extends Activity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             t_notes_Viewer.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
+
 
                     end = true;
+
+                    if(mode.equals("timestampViewer")) {
+
+
+                        if (isVideoInfoViewerTimestampUpdated) {
+                            mode = "videoInfoViewer";
+                            getResultsFromApi();
+                        }else  if (isViewerTimestampUpdated) {
+                            mode = "viewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            EventList();
+                            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                            loadingCircle.setVisibility(View.GONE);
+                        }
+                    }else if(mode.equals("viewer")) {
+                        retrievingDataEnd = true;
+                        if(globalDataArrayString.equals("unknown"))
+                            postViewerMode();
+                    }else if(mode.equals("videoInfoViewer"))
+                    {
+                        if (isViewerTimestampUpdated) {
+                            mode = "viewer";
+                            getResultsFromApi();
+                        }else{
+                            retrievingDataEnd = true;
+                            if(globalDataArrayString.equals("unknown"))
+                                postViewerMode();
+                        }
+                    }
+
+                    if(retrievingDataEnd) {
+                        if (isViewerTimestampUpdated || isVideoInfoViewerTimestampUpdated )
+                            postViewerMode();
+                    }
                     EventList();
                 }
             } else {
@@ -615,17 +746,7 @@ public class t_notes_Viewer extends Activity
         }
     }
 
-    private void Go(List<String> output) {
-        mProgress.hide();
-        if (output == null || output.size() == 0) {
-            mOutputText.setText("No results returned.");
-        } else {
-            output.add(0, "Data retrieved using the Google Sheets API:");
-            mOutputText.setText(TextUtils.join("\n", output));
 
-
-        }
-    }
 
     public void onClick2(View v) {
 
@@ -635,20 +756,6 @@ public class t_notes_Viewer extends Activity
 
     }
 
-    public static List<List<Object>> getData (String id , String passString )  {
-
-        List<Object> data1 = new ArrayList<Object>();
-        data1.add(id);
-        data1.add(pass);
-
-
-
-
-        List<List<Object>> data = new ArrayList<List<Object>>();
-        data.add (data1);
-
-        return data;
-    }
 
 
 
@@ -657,36 +764,11 @@ public class t_notes_Viewer extends Activity
 
 
 
-    public void displayStudentInfo()
-    {
-        TextView fName = (TextView) findViewById(R.id.pFirstName);
-        TextView lName = (TextView) findViewById(R.id.pLastName);
-        TextView tclass = (TextView) findViewById(R.id.pClass);
-        TextView section = (TextView) findViewById(R.id.pSection);
-        TextView Email = (TextView) findViewById(R.id.pEmail);
-        TextView Phone = (TextView) findViewById(R.id.pPhoneNo);
-        TextView id = (TextView) findViewById(R.id.pUser_id);
 
 
-        fName.setText(dFName);
-        lName.setText(dLName);
-        tclass.setText(dClass);
-        section.setText(dSection);
-        Email.setText(dEmail);
-        Phone.setText(dPhone);
-        id.setText(dId);
-
-    }
 
 
-    public void saveData(){
 
-
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
-        SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
-
-    }
 
     public void loadData(){
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
@@ -705,22 +787,11 @@ public class t_notes_Viewer extends Activity
 
 
 
-        String tableString = mPrefs.getString("table", "default_value_if_variable_not_found");
 
         savedPass = passString;
         savedId = idString;
 
 
-
-        //tableDetails
-        tableNo = mPrefs.getInt("tableNo", 1);
-        String tableSheetId = mPrefs.getString("tableSheetId", "1g6CIOrbqXTrMOMnlrgi_S2HpaABcUqPd_vch8HHSujM");
-        gSavedTableSheetId = tableSheetId;
-
-
-
-        mOutputText.setText("");
-        getResultsFromApi();
 
     }
 
@@ -728,33 +799,22 @@ public class t_notes_Viewer extends Activity
 
 
 
+        newsfeedAdapter adapter = new newsfeedAdapter(this, words);
 
 
-
-
-
-
-
-
-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The
-        // adapter knows how to create list items for each item in the list.
-        WordAdapter adapter = new WordAdapter(this, words);
-
-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.
-        // There should be a {@link ListView} with the view ID called list, which is declared in the
-        // activity_numbers.xml layout file.
         ListView listView = (ListView) findViewById(R.id.list);
 
-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the
-        // {@link ListView} will display list items for each {@link Word} in the list.
         listView.setAdapter(adapter);
+        listViewGlobal = listView;
+
+        listViewGlobal.setOnScrollListener(onScrollListener());
 
         if(end) {
 
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                    Word word = words.get(position);
+                    newsfeedPublic word = words.get(position);
 
                     //Get on clicked data
                     String exTitle = word.getMiwokTranslation();  //Title
@@ -767,16 +827,13 @@ public class t_notes_Viewer extends Activity
                     String exFileAttachment = word.getFileAttachment();
 
 
-
-
                     //Save Data
                     SharedPreferences mPrefs = getSharedPreferences("label", 0);
                     SharedPreferences.Editor mEditor = mPrefs.edit();
-                    mEditor.putString("title", exTitle).commit();
-                    mEditor.putString("desc", exDesc).commit();
-                    mEditor.putString("fullName", exFullName).commit();
-                    mEditor.putString("fileAttachment", exFileAttachment).commit();
-
+                    mEditor.putString("title", exTitle).apply();
+                    mEditor.putString("desc", exDesc).apply();
+                    mEditor.putString("fullName", exFullName).apply();
+                    mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
 
@@ -794,7 +851,6 @@ public class t_notes_Viewer extends Activity
 
 
 
-
                 }
 
 
@@ -806,13 +862,31 @@ public class t_notes_Viewer extends Activity
         Spinner deptSpinner = (Spinner) findViewById(R.id.spinner_dept);
         Spinner semSpinner = (Spinner)  findViewById(R.id.spinner_semesters);
 
+
         dept_filter = String.valueOf(deptSpinner.getSelectedItem());
         semester_filter = String.valueOf(semSpinner.getSelectedItem());
 
-
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("savedDepartmentNotes", dept_filter).apply();
+        mEditor.putString("savedSemesterNotes", semester_filter).apply();
 
 
         words.clear();
+        viewerArrayList.clear();
+        mEditor.putString("savedNotesTimestamp", "1521000000").apply();
+        mEditor.putString("savedNotesVideoInfoViewerTimestamp", "1521000000").apply();
+        mEditor.putString("savedIndividualNotesDataArray", "unknown").apply();
+        viewerTimestamp = "1521000000";
+        videoInfoViewerTimestamp = "1521000000";
+        globalDataArrayString = "unknown";
+        viewerTimestampHolder = "1521000000";
+        videoInfoViewerTimestampHolder = "1521000000";
+        mode = "timestampViewer";
+        isViewerTimestampUpdated = false;
+        isVideoInfoViewerTimestampUpdated = false;
+        retrievingDataEnd = false;
+        EventList();
 
 
         mOutputText.setText("");
@@ -826,113 +900,364 @@ public class t_notes_Viewer extends Activity
 
     }
 
-    public void onClickAttendance(View v)
+
+
+
+
+
+
+//    public void onClickAddVideo(View view)
+//    {
+//        Intent selectIntent = new Intent(t_notes_Viewer.this,youtubeUploadMainActivity.class);
+//        startActivity(selectIntent);
+//    }
+
+
+    private void hideOnScroll()
     {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,feedbackWriter.class);
-        startActivity(selectIntent);
-
-
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.GONE);
     }
 
-    public void onClickAnnouncement(View v)
+    private void showOnScroll()
     {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,t_Announcement_Viewer.class);
-        startActivity(selectIntent);
-
-
-    }
-
-    public void onClickNotes(View v)
-    {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,t_notes_Viewer.class);
-        startActivity(selectIntent);
-
-
-    }
-
-    public void onClickEvents(View v)
-    {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,EventViewer.class);
-        startActivity(selectIntent);
-
-
-    }
-
-    public void onClickProfile(View v)
-    {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,Newsfeed.class);
-        startActivity(selectIntent);
-
-
-    }
-
-    public void onClickPlus(View v)
-    {
-        Intent selectIntent = new Intent(t_notes_Viewer.this,t_notes_writer.class);
-        startActivity(selectIntent);
-
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.VISIBLE);
 
     }
 
 
+    public AbsListView.OnScrollListener onScrollListener() {
+        return new AbsListView.OnScrollListener() {
 
-    private void swipe() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
 
-        TextView head2 = (TextView) findViewById(R.id.head2);
-        TextView head1 = (TextView) findViewById(R.id.head);
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
+                                 int totalItemCount) {
+                if (firstVisibleItem == 0) {
+                    // check if we reached the top or bottom of the list
+                    View v = listViewGlobal.getChildAt(0);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the top: visible header and footer
+                        showOnScroll();
+                        Log.i("scrollLocation", "top reached");
 
-        Button button1 = (Button) findViewById(R.id.Button1);
-        Button button2 = (Button) findViewById(R.id.Button2);
-        Button button3 = (Button) findViewById(R.id.Button3);
+                    }
+                } else if (totalItemCount - visibleItemCount == firstVisibleItem) {
+                    View v = listViewGlobal.getChildAt(totalItemCount - 1);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the bottom: visible header and footer
+                        Log.i("scrollLocation", "bottom reached!");
+
+                    }
+                } else if (totalItemCount - visibleItemCount > firstVisibleItem){
+                    // on scrolling
+                    hideOnScroll();
+                    Log.i("scrollLocation", "on scroll");
+                }
+            }
+        };
+    }
+
+
+    //Saved listView functions
 
 
 
-        if(a==0){
 
-            Intent selectIntent = new Intent(t_notes_Viewer.this,feedbackWriter.class);
-            startActivity(selectIntent);
+
+    public boolean timestampCompare(String timestampRetrieved, String timestampStored){
+
+
+        return !timestampRetrieved.equals(timestampStored);
+
+    }
+
+    public void loadDataArray(){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        globalDataArrayString = mPrefs.getString("savedIndividualNotesDataArray", "unknown");
+
+
+    }
+
+
+    public void postViewerMode()
+    {
+
+        String newsfeedAnnouncementsString;
+        newsfeedAnnouncementsString = viewerArrayList.toString().replace("[","");
+        newsfeedAnnouncementsString = newsfeedAnnouncementsString.replace("]","");
+        String storedData;
+        String dataRetrieved ="";
+        if(globalDataArrayString.equals("unknown")) {
+
+            storedData = "[";
+
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved +  newsfeedAnnouncementsString;
+
+
+        }else
+        {
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved + "," +  newsfeedAnnouncementsString;
+            storedData =  globalDataArrayString.replace("]","");
+        }
+        viewerTimestamp = viewerTimestampHolder;
+        videoInfoViewerTimestamp = videoInfoViewerTimestampHolder;
+
+
+
+
+        saveTimestamps();
+
+
+
+
+        String concatenatedData =  storedData + dataRetrieved + "]";
+
+        int maxLogSize = 1000;
+        for(int i = 0; i <= concatenatedData.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = (i+1) * maxLogSize;
+            end = end > concatenatedData.length() ? concatenatedData.length() : end;
+        }
+
+
+
+        sortDataByDate(concatenatedData);
+//        mProgress.hide();
+        EventList();
+        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+        loadingCircle.setVisibility(View.GONE);
+
+//        hideLoading();
+
+    }
+    public void sortDataByDate(String dateRetrieved)
+    {
+        saveDataArray(dateRetrieved);
+
+
+        String trimmedString = dateRetrieved.replace("[","");
+        trimmedString = trimmedString.replace("]","");
+
+        trimmedString = trimmedString.replace(" NOTES","NOTES");
+        trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
+        trimmedString = trimmedString.replace(" EVENTS","EVENTS");
+
+
+
+        String dateArray[] = trimmedString.split(",");
+        String elementArray[];
+        String elementMode;
+
+
+
+        int i;
+
+        int latestIndex = 0;
+
+        String transferArray[] = {"hello","hello"};
+
+
+
+        words.clear();
+        for(i=0;i<dateArray.length;i++) {
+
+            String latestDate;
+
+            elementArray = dateArray[i].split("%");
+            elementMode = elementArray[0];
+
+
+
+            if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
+                latestDate = elementArray[9];
+
+            } else if (elementMode.contains("EVENTS")) {
+                latestDate = elementArray[8];
+            } else {
+                break;
+            }
+//
+
+
+            int k = i;
+
+            for (k = k; k < dateArray.length; k++) {
+                latestDate = latestDate.trim();
+                int latestTimestamp = Integer.parseInt(latestDate);
+
+
+                elementArray = dateArray[k].split("%");
+                elementMode = elementArray[0];
+                String challengeDate = "o";
+                if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
+                    challengeDate = elementArray[9];
+
+                } else if (elementMode.equals("EVENTS")) {
+                    challengeDate = elementArray[8];
+                } else {
+                    break;
+                }
+
+
+                challengeDate = challengeDate.trim();
+                int challengeTimestamp = Integer.parseInt(challengeDate);
+
+
+
+                boolean lastestDayIsPast = false;
+
+                if(challengeTimestamp >= latestTimestamp )
+                    lastestDayIsPast = true;
+
+//
+                if (lastestDayIsPast) {
+
+                    latestDate = challengeDate;
+                    latestIndex = k;
+
+                }
+
+
+
+
+            }
+
+
+
+            transferArray[0] = dateArray[i];
+            dateArray[i] = dateArray[latestIndex];
+
+            dateArray[latestIndex] = transferArray[0];
+
+
+            if(i==dateArray.length) {
+
+                elementArray = dateArray[dateArray.length - 2].split("%");
+
+            }
+            else
+            {
+                elementArray = dateArray[i].split("%");
+            }
+
+
+
+
+            elementMode = elementArray[0];
+            String element0 = splitProtectionDeactivated(elementArray[0]);
+            String element1 = splitProtectionDeactivated(elementArray[1]);
+            String element2 = splitProtectionDeactivated(elementArray[2]);
+            String element3 = splitProtectionDeactivated(elementArray[3]);
+            String element4 = splitProtectionDeactivated(elementArray[4]);
+            String element5 = splitProtectionDeactivated(elementArray[5]);
+            String element6 = splitProtectionDeactivated(elementArray[6]);
+            String element7 = splitProtectionDeactivated(elementArray[7]);
+            String element8 = splitProtectionDeactivated(elementArray[8]);
+
+
+
+            if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
+
+                String element9 = splitProtectionDeactivated(elementArray[9]);
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element8, element0,element9));
+            } else {
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element0,element8));
+            }
+
 
         }
 
 
-        if(a==1) {
-
-            Intent selectIntent = new Intent(t_notes_Viewer.this,t_Announcement_Viewer.class);
-            startActivity(selectIntent);
-
-
-        }
-
-        if(a==2) {
-            Intent selectIntent = new Intent(t_notes_Viewer.this,t_notes_Viewer.class);
-            startActivity(selectIntent);
-        }
-
-        if(a==3) {
-            Intent selectIntent = new Intent(t_notes_Viewer.this,EventViewer.class);
-            startActivity(selectIntent);
-
-        }
-
-        if(a==4){
-            Intent selectIntent = new Intent(t_notes_Viewer.this,Newsfeed.class);
-            startActivity(selectIntent);
-
-        }
-
-
-
-
-
 
 
 
 
     }
+    public void saveTimestamps()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("savedNotesTimestamp", viewerTimestamp).apply();
+        mEditor.putString("savedNotesVideoInfoViewerTimestamp", videoInfoViewerTimestamp).apply();
+
+    }
+
+
+    public void loadDataForList(){
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        dept_filter =  mPrefs.getString("savedDepartmentNotes", "All Departments");
+        semester_filter = mPrefs.getString("savedSemesterNotes","All Semesters");
+
+
+        viewerTimestamp = mPrefs.getString("savedNotesTimestamp", "1521000000");
+        videoInfoViewerTimestamp =  mPrefs.getString("savedNotesVideoInfoViewerTimestamp", "1521000000");
+
+
+        Spinner semesterSpinner = (Spinner) findViewById(R.id.spinner_semesters);
+        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_dept);
+
+        semesterSpinner.setSelection(((ArrayAdapter)semesterSpinner.getAdapter()).getPosition(semester_filter));
+        departmentSpinner.setSelection(((ArrayAdapter)departmentSpinner.getAdapter()).getPosition(dept_filter));
+    }
+
+    public void saveDataArray(String dataArray){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        mEditor.putString("savedIndividualNotesDataArray", dataArray).apply();
+
+    }
+
+    public String  splitProtection(String original)
+    {
+        original = original.replace(",","<comma5582>");
+        original = original.replace("%","<percent6643>");
+        original = original.replace("NOTES","<notes6513>");
+        original = original.replace("ANNOUNCEMENTS","<announcements9235>");
+        original = original.replace("EVENTS","<events3321>");
+        return original;
+    }
+
+    public String  splitProtectionDeactivated(String original)
+    {
+        original = original.replace("<comma5582>",",");
+        original = original.replace("<percent6643>","%");
+        original = original.replace("<notes6513>","NOTES");
+        original = original.replace("<announcements9235>","ANNOUNCEMENTS");
+        original = original.replace("<events3321>","EVENTS");
+        return original;
+    }
 
 
 
 
+
+
+
+
+
+    //Color Check and onClick Events
     private void colorCheck() {
 
         ImageView attendanceImageView = (ImageView) findViewById(R.id.attendance);
@@ -986,9 +1311,45 @@ public class t_notes_Viewer extends Activity
 
     }
 
+    public void onClickAttendance(View v)
+    {
+        Intent selectIntent = new Intent(t_notes_Viewer.this,feedbackWriter.class);
+        startActivity(selectIntent);
 
 
+    }
 
+    public void onClickAnnouncement(View v)
+    {
+        Intent selectIntent = new Intent(t_notes_Viewer.this,t_Announcement_Viewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickNotes(View v)
+    {
+        Intent selectIntent = new Intent(t_notes_Viewer.this,t_notes_Viewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickEvents(View v)
+    {
+        Intent selectIntent = new Intent(t_notes_Viewer.this,EventViewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickProfile(View v)
+    {
+        Intent selectIntent = new Intent(t_notes_Viewer.this,Newsfeed.class);
+        startActivity(selectIntent);
+
+
+    }
 
 
 }

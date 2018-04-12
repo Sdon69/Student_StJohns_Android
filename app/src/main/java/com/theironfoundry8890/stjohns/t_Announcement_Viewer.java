@@ -13,16 +13,18 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -50,7 +52,7 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static com.theironfoundry8890.stjohns.R.id.pass;
+
 
 public class t_Announcement_Viewer extends Activity
         implements EasyPermissions.PermissionCallbacks {
@@ -68,12 +70,13 @@ public class t_Announcement_Viewer extends Activity
     private String sPassword;private String userId;
     private boolean idAvailcheck = true;
     private String mode = "timestampViewer" ;
-    private boolean isAnnouncementTimestampUpdated = false;
-
+    private boolean isViewerTimestampUpdated = false;
+    private ListView  listViewGlobal;
     private String globalDataArrayString;
     private boolean retrievingDataEnd = false;
-    private String newsfeedAnnouncementTimestamp;
-    private String newsfeedAnnouncementTimestampHolder;
+    private String viewerTimestamp;
+    private String viewerTimestampHolder;
+
 
 
 
@@ -83,7 +86,7 @@ public class t_Announcement_Viewer extends Activity
     static final int MIN_DISTANCE = 150;
 
     private String fullName;
-    final ArrayList<newsfeedPublic> newsfeedAnnouncements = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> viewerArrayList = new ArrayList<newsfeedPublic>();
 
     private String title;
     private String description;
@@ -99,22 +102,17 @@ public class t_Announcement_Viewer extends Activity
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
 
-    private String dFName;
-    private String dLName;
-    private String dClass;
-    private String dEmail;
-    private String dSection;
     private String dId;
-    private String dPassword;
-    private String dPhone;
     private List dRow;
 
     private boolean end = true;
+
 
     private int tableNo;
     private String gSavedAnnSheetId;
     private String savedPass;
     private String savedId;
+
 
 
 
@@ -169,6 +167,8 @@ public class t_Announcement_Viewer extends Activity
         mProgress.setCanceledOnTouchOutside(false);
 
         setContentView(activityLayout);
+
+
 
         colorCheck();
         // Initialize credentials and service object.
@@ -361,7 +361,7 @@ public class t_Announcement_Viewer extends Activity
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(this);
-        Log.v("t_Announcement_Viewer" , "Success");
+
         return connectionStatusCode == ConnectionResult.SUCCESS;
 
     }
@@ -436,21 +436,17 @@ public class t_Announcement_Viewer extends Activity
          * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            String spreadsheetId = "116OBhXliG69OB5bKRAEwpmlOz21LCCWStniSuIR6wPI";
+            String spreadsheetId = sheetsIdCollection.getAnnouncementSheetId();
             int a = 2;
             idAvailcheck = true;
             String range = "Stj Teacher Notes!".concat("A"+ a++ + ":I");
             end = false;
 
-            List<List<Object>> arrData = getData(title,description );
 
-            ValueRange oRange = new ValueRange();
-            oRange.setRange(range); // I NEED THE NUMBER OF THE LAST ROW
-            oRange.setValues(arrData);
 
 
             List<ValueRange> oList = new ArrayList<>();
-            oList.add(oRange);
+
 
 
             BatchUpdateValuesRequest oRequest = new BatchUpdateValuesRequest();
@@ -464,7 +460,7 @@ public class t_Announcement_Viewer extends Activity
 
             if(mode.equals("timestampViewer"))
             {
-                spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU";
+                spreadsheetId= sheetsIdCollection.getMiscSheetId();
                 range = "Timestamp!".concat("A"+ 2 + ":B");
             }
 
@@ -485,39 +481,31 @@ public class t_Announcement_Viewer extends Activity
 
                         if (modeRetrieved.equals("announcementViewer")) {
                             String timeStamp = String.valueOf(row.get(1));
-                            isAnnouncementTimestampUpdated =
-                                    timestampCompare(timeStamp, newsfeedAnnouncementTimestamp);
+                            isViewerTimestampUpdated =
+                                    timestampCompare(timeStamp, viewerTimestamp);
 
-                            newsfeedAnnouncementTimestampHolder = timeStamp;
+                            viewerTimestampHolder = timeStamp;
                         }
-                    }
+                    }else if(mode.equals("viewer")) {
 
-                    String timeStamp = String.valueOf(row.get(8));
+                        String timeStamp = String.valueOf(row.get(8));
 
-                    if(Integer.parseInt(timeStamp)<=Integer.parseInt(newsfeedAnnouncementTimestamp))
-                        continue;
-
-
-                    dId = String.valueOf(row.get(0));
+                        if (Integer.parseInt(timeStamp) <= Integer.parseInt(viewerTimestamp))
+                            continue;
 
 
+                        dId = String.valueOf(row.get(0));
 
 
-                    dRow = row;
+                        dRow = row;
 
 
+                        if (dId.contains("BonBlank88")) {
+                            end = true;
 
+                            continue;
+                        }
 
-
-
-                    if (dId.contains("BonBlank88"))
-                    {
-                        end = true;
-
-                        continue;
-                    }
-
-                    if(mode.equals("announcementViewer")) {
 
 
                         String cataegories = String.valueOf(row.get(2));
@@ -545,14 +533,14 @@ public class t_Announcement_Viewer extends Activity
                                 timeStamp = splitProtection(timeStamp);
 
 
-                                newsfeedAnnouncements.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
+                                viewerArrayList.add(new newsfeedPublic(description, title, cataegories, publisherId, fullName, uniqueId, datePublished
                                         , fileAttachment, "ANNOUNCEMENTS", timeStamp));
                             }
                         }
 
 
-                    }
 
+                    }
 
 
 
@@ -579,8 +567,9 @@ public class t_Announcement_Viewer extends Activity
         @Override
         protected void onPreExecute() {
             mOutputText.setText("");
-            mProgress.show();
-            Log.v("t_Announcement_Viewer" , "Worked");
+            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+            loadingCircle.setVisibility(View.VISIBLE);
+
 
 
         }
@@ -594,27 +583,32 @@ public class t_Announcement_Viewer extends Activity
                 mOutputText.setText("No results returned.");
 
             } else {
-                output.add(0, " ");
-                mOutputText.setText(TextUtils.join("\n", output));
-
                 end = true;
 
                 if(mode.equals("timestampViewer")) {
 
-                    if (isAnnouncementTimestampUpdated) {
-                        mode = "announcementViewer";
+                    if (isViewerTimestampUpdated) {
+                        mode = "viewer";
                         getResultsFromApi();
+                    }else
+                    {
+                        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                        loadingCircle.setVisibility(View.GONE);
                     }
-                }else if(mode.equals("announcementViewer")) {
+                }else if(mode.equals("viewer")) {
                     retrievingDataEnd = true;
                     if(globalDataArrayString.equals("unknown"))
-                        postEventViewerMode();
+                        postViewerMode();
                 }
 
                 if(retrievingDataEnd) {
-                    if (isAnnouncementTimestampUpdated)
-                        postEventViewerMode();
+                    if (isViewerTimestampUpdated)
+                        postViewerMode();
                 }
+
+                EventList();
+
+
 
 
 
@@ -623,7 +617,7 @@ public class t_Announcement_Viewer extends Activity
 
         @Override
         protected void onCancelled() {
-            mProgress.hide();
+//            mProgress.hide();
 
             if (mLastError != null) {
                 if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
@@ -635,11 +629,39 @@ public class t_Announcement_Viewer extends Activity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             t_Announcement_Viewer.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
-                    Log.v("t_Announcement_Viewer" , "Worked2");
+
                     end = true;
+
+                    if(mode.equals("timestampViewer")) {
+
+
+                        if (isViewerTimestampUpdated) {
+                            mode = "viewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                            loadingCircle.setVisibility(View.GONE);
+                        }
+                    }else if(mode.equals("viewer")) {
+                        retrievingDataEnd = true;
+                        if(globalDataArrayString.equals("unknown"))
+                            postViewerMode();
+                    }
+
+                    if(retrievingDataEnd) {
+                        if (isViewerTimestampUpdated)
+                            postViewerMode();
+                    }
                     EventList();
+
+
+                    if(globalDataArrayString.equals("[]"))
+                    {
+                        Button filterButton = (Button) findViewById(R.id.button2);
+                        filterButton.performClick();
+                    }
+
                 }
             } else {
                 mOutputText.setText("Request cancelled.");
@@ -657,20 +679,7 @@ public class t_Announcement_Viewer extends Activity
 
     }
 
-    public static List<List<Object>> getData (String id , String passString )  {
 
-        List<Object> data1 = new ArrayList<Object>();
-        data1.add(id);
-        data1.add(pass);
-
-
-
-
-        List<List<Object>> data = new ArrayList<List<Object>>();
-        data.add (data1);
-
-        return data;
-    }
 
 
 
@@ -686,7 +695,7 @@ public class t_Announcement_Viewer extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
+        mEditor.putString("tag", sId).apply();
         Log.v("Saved data" , sId);
     }
 
@@ -704,6 +713,8 @@ public class t_Announcement_Viewer extends Activity
 
 
 
+
+
         String tableString = mPrefs.getString("table", "default_value_if_variable_not_found");
 
         savedPass = passString;
@@ -716,9 +727,6 @@ public class t_Announcement_Viewer extends Activity
         String AnnSheetId = mPrefs.getString("AnnSheetId", "1OKiX0QWm2VerdWhuLPF1NIoTEOXHpBFo9qNPgu9HH7Y");
         gSavedAnnSheetId = AnnSheetId;
 
-        mOutputText.setText("");
-        getResultsFromApi();
-
     }
 
     public void EventList(){
@@ -727,56 +735,59 @@ public class t_Announcement_Viewer extends Activity
 
 
 
-                newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+        newsfeedAdapter adapter = new newsfeedAdapter(this, words);
 
 
-                ListView listView = (ListView) findViewById(R.id.list);
+        ListView listView = (ListView) findViewById(R.id.list);
 
 
-                listView.setAdapter(adapter);
+        listView.setAdapter(adapter);
+        listViewGlobal = listView;
 
-                if (end) {
+        listViewGlobal.setOnScrollListener(onScrollListener());
 
-                    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                            newsfeedPublic word = words.get(position);
+        if (end) {
 
-                            //Get on clicked data
-                            String exTitle = word.getMiwokTranslation();  //Title
-                            String exDesc = word.getDefaultTranslation();  //Description
-                            String exPublishDate = word.getPublishDate(); // Cataegories
-                            String exEventDate = word.getEventDate();// Publisher Id
-                            String exFullName = word.getLastDateofRegistration(); //full name
-                            String exFees = word.getEntryFees(); // Unique Id
-                            String exLastDateofRegistation = word.getfullName(); // Publish Date
-                            String exFileAttachment = word.getFileAttachment();
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    newsfeedPublic word = words.get(position);
 
-
-
-                            //Save Data
-                            SharedPreferences mPrefs = getSharedPreferences("label", 0);
-                            SharedPreferences.Editor mEditor = mPrefs.edit();
-                            mEditor.putString("title", exTitle).commit();
-                            mEditor.putString("desc", exDesc).commit();
-                            mEditor.putString("publishDate", exPublishDate).commit();
-                            mEditor.putString("eventDate", exEventDate).commit();
-                            mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                            mEditor.putString("fees", exFees).commit();
-                            mEditor.putString("fullName", exFullName).commit();
-                            mEditor.putString("fileAttachment", exFileAttachment).commit();
+                    //Get on clicked data
+                    String exTitle = word.getMiwokTranslation();  //Title
+                    String exDesc = word.getDefaultTranslation();  //Description
+                    String exPublishDate = word.getPublishDate(); // Cataegories
+                    String exEventDate = word.getEventDate();// Publisher Id
+                    String exFullName = word.getLastDateofRegistration(); //full name
+                    String exFees = word.getEntryFees(); // Unique Id
+                    String exLastDateofRegistation = word.getfullName(); // Publish Date
+                    String exFileAttachment = word.getFileAttachment();
 
 
-                            Intent selectIntent = new Intent(t_Announcement_Viewer.this, t_Detailed_Announcement.class);
-                            startActivity(selectIntent);
+
+                    //Save Data
+                    SharedPreferences mPrefs = getSharedPreferences("label", 0);
+                    SharedPreferences.Editor mEditor = mPrefs.edit();
+                    mEditor.putString("title", exTitle).apply();
+                    mEditor.putString("desc", exDesc).apply();
+                    mEditor.putString("publishDate", exPublishDate).apply();
+                    mEditor.putString("eventDate", exEventDate).apply();
+                    mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                    mEditor.putString("fees", exFees).apply();
+                    mEditor.putString("fullName", exFullName).apply();
+                    mEditor.putString("fileAttachment", exFileAttachment).apply();
 
 
-                        }
+                    Intent selectIntent = new Intent(t_Announcement_Viewer.this, t_Detailed_Announcement.class);
+                    startActivity(selectIntent);
 
 
-                    });
                 }
-            }// End of announcementViewer mode for EventList
+
+
+            });
+        }
+    }// End of announcementViewer mode for EventList
 
 
 
@@ -787,7 +798,22 @@ public class t_Announcement_Viewer extends Activity
 
         dept_filter = String.valueOf(deptSpinner.getSelectedItem());
         semester_filter = String.valueOf(semSpinner.getSelectedItem());
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("savedDepartmentAnnouncement", dept_filter).apply();
+        mEditor.putString("savedSemesterAnnouncement", semester_filter).apply();
+
+
         words.clear();
+        mEditor.putString("savedAnnouncementTimestamp", "1521000000").apply();
+        mEditor.putString("savedIndividualAnnouncementDataArray", "unknown").apply();
+        viewerTimestamp = "1521000000";
+        globalDataArrayString = "unknown";
+        viewerTimestampHolder = "1521000000";
+        mode = "timestampViewer";
+        isViewerTimestampUpdated = false;
+        EventList();
 
 
         mOutputText.setText("");
@@ -801,191 +827,16 @@ public class t_Announcement_Viewer extends Activity
 
     }
 
-    public void onClickAttendance(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,feedbackWriter.class);
-        startActivity(selectIntent);
 
 
-    }
 
-    public void onClickAnnouncement(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Viewer.class);
-        startActivity(selectIntent);
 
 
-    }
 
-    public void onClickNotes(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_notes_Viewer.class);
-        startActivity(selectIntent);
 
 
-    }
 
-    public void onClickEvents(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,EventViewer.class);
-        startActivity(selectIntent);
 
-
-    }
-
-    public void onClickProfile(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,Newsfeed.class);
-        startActivity(selectIntent);
-
-
-    }
-
-    public void onClickPlus(View v)
-    {
-        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Writer.class);
-        startActivity(selectIntent);
-
-
-    }
-
-
-
-    private void swipe() {
-
-        TextView head2 = (TextView) findViewById(R.id.head2);
-        TextView head1 = (TextView) findViewById(R.id.head);
-
-        Button button1 = (Button) findViewById(R.id.Button1);
-        Button button2 = (Button) findViewById(R.id.Button2);
-        Button button3 = (Button) findViewById(R.id.Button3);
-
-
-
-        if(a==0){
-
-            Intent selectIntent = new Intent(t_Announcement_Viewer.this,feedbackWriter.class);
-            startActivity(selectIntent);
-
-        }
-
-
-        if(a==1) {
-
-            Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Viewer.class);
-            startActivity(selectIntent);
-
-
-        }
-
-        if(a==2) {
-            Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_notes_Viewer.class);
-            startActivity(selectIntent);
-        }
-
-        if(a==3) {
-            Intent selectIntent = new Intent(t_Announcement_Viewer.this,EventViewer.class);
-            startActivity(selectIntent);
-
-        }
-
-        if(a==4){
-            Intent selectIntent = new Intent(t_Announcement_Viewer.this,Newsfeed.class);
-            startActivity(selectIntent);
-
-        }
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-    private void colorCheck() {
-
-        ImageView attendanceImageView = (ImageView) findViewById(R.id.attendance);
-        ImageView announcementImageView = (ImageView) findViewById(R.id.announcement);
-        ImageView notesImageView = (ImageView) findViewById(R.id.notes);
-        ImageView eventsImageView = (ImageView) findViewById(R.id.events);
-        ImageView profileImageView = (ImageView) findViewById(R.id.profile);
-
-
-        if (a == 0) {
-
-            attendanceImageView.setImageResource(R.drawable.attendance_grey);
-            announcementImageView.setImageResource(R.drawable.announcements);
-            notesImageView.setImageResource(R.drawable.notes);
-            eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.newsfeed);
-
-        }
-        if (a == 1) {
-            attendanceImageView.setImageResource(R.drawable.attendance);
-            announcementImageView.setImageResource(R.drawable.announcements_grey);
-            notesImageView.setImageResource(R.drawable.notes);
-            eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.newsfeed);
-        }
-
-        if (a == 2) {
-            attendanceImageView.setImageResource(R.drawable.attendance);
-            announcementImageView.setImageResource(R.drawable.announcements);
-            notesImageView.setImageResource(R.drawable.notes_grey);
-            eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.newsfeed);
-        }
-
-        if (a == 3) {
-            attendanceImageView.setImageResource(R.drawable.attendance);
-            announcementImageView.setImageResource(R.drawable.announcements);
-            notesImageView.setImageResource(R.drawable.notes);
-            eventsImageView.setImageResource(R.drawable.events_grey);
-            profileImageView.setImageResource(R.drawable.newsfeed);
-        }
-
-        if (a == 4) {
-            attendanceImageView.setImageResource(R.drawable.attendance);
-            announcementImageView.setImageResource(R.drawable.announcements);
-            notesImageView.setImageResource(R.drawable.notes);
-            eventsImageView.setImageResource(R.drawable.events);
-            profileImageView.setImageResource(R.drawable.newsfeed_grey);
-        }
-
-
-    }
-
-    private void deviceOffline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(R.drawable.no_connection);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.content_viewer);
-        listviewer.setVisibility(View.INVISIBLE);
-    }
-    private void deviceOnline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(0);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.content_viewer);
-        listviewer.setVisibility(View.VISIBLE);
-    }
-
-
-
-
-    public String  splitProtection(String original)
-    {
-        original = original.replace(",","<comma5582>");
-        original = original.replace("%","<percent6643>");
-
-        return original;
-    }
 
     public boolean timestampCompare(String timestampRetrieved, String timestampStored){
 
@@ -999,18 +850,17 @@ public class t_Announcement_Viewer extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
 
-        Log.v("globalDataArrayString","before");
-        globalDataArrayString = mPrefs.getString("dataArray", "unknown");
-        Log.v("globalDataArrayString",globalDataArrayString);
+        globalDataArrayString = mPrefs.getString("savedIndividualAnnouncementDataArray", "unknown");
+
 
     }
 
 
-    public void postEventViewerMode()
+    public void postViewerMode()
     {
 
         String newsfeedAnnouncementsString;
-        newsfeedAnnouncementsString = newsfeedAnnouncements.toString().replace("[","");
+        newsfeedAnnouncementsString = viewerArrayList.toString().replace("[","");
         newsfeedAnnouncementsString = newsfeedAnnouncementsString.replace("]","");
         String storedData;
         String dataRetrieved ="";
@@ -1028,7 +878,7 @@ public class t_Announcement_Viewer extends Activity
                 dataRetrieved = dataRetrieved + "," +  newsfeedAnnouncementsString;
             storedData =  globalDataArrayString.replace("]","");
         }
-        newsfeedAnnouncementTimestamp = newsfeedAnnouncementTimestampHolder;
+        viewerTimestamp = viewerTimestampHolder;
 
 
 
@@ -1050,8 +900,10 @@ public class t_Announcement_Viewer extends Activity
 
 
         sortDataByDate(concatenatedData);
-        mProgress.hide();
+//        mProgress.hide();
         EventList();
+        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+        loadingCircle.setVisibility(View.GONE);
 
 //        hideLoading();
 
@@ -1209,34 +1061,25 @@ public class t_Announcement_Viewer extends Activity
     {
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).commit();
+        mEditor.putString("savedAnnouncementTimestamp", viewerTimestamp).apply();
     }
 
 
     public void loadDataForList(){
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
 
-//
-//        globalDepartment =  mPrefs.getString("savedDepartmentAnnouncement", "unknown");
-//        String semester = mPrefs.getString("savedSemesterAnnouncement", "default_value_if_variable_not_found");
-//        integerSemester = Integer.parseInt(semester);
-        newsfeedAnnouncementTimestamp = mPrefs.getString("savedAnnouncementTimestamp", "1521000000");
+        dept_filter =  mPrefs.getString("savedDepartmentAnnouncement", "All Departments");
+        semester_filter = mPrefs.getString("savedSemesterAnnouncement", "All Semesters");
 
 
-//        if (semester.equals("1")) {
-//            sSemester = "First Semester";
-//        } else if (semester.equals("2")) {
-//            sSemester = "Second Semester";
-//        } else if (semester.equals("3")) {
-//            sSemester = "Third Semester";
-//        } else if (semester.equals("4")) {
-//            sSemester = "Fourth Semester";
-//        } else if (semester.equals("5")) {
-//            sSemester = "Fifth Semester";
-//        } else if (semester.equals("6")) {
-//            sSemester = "Sixth and Above Semesters";
-//        }
+        viewerTimestamp = mPrefs.getString("savedAnnouncementTimestamp", "1521000000");
 
+
+        Spinner semesterSpinner = (Spinner) findViewById(R.id.spinner_semesters);
+        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_dept);
+
+        semesterSpinner.setSelection(((ArrayAdapter)semesterSpinner.getAdapter()).getPosition(semester_filter));
+        departmentSpinner.setSelection(((ArrayAdapter)departmentSpinner.getAdapter()).getPosition(dept_filter));
     }
 
     public void saveDataArray(String dataArray){
@@ -1244,17 +1087,196 @@ public class t_Announcement_Viewer extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        Log.v("dataArray",dataArray);
-        mEditor.putString("dataArray", dataArray).commit();
 
+        mEditor.putString("savedIndividualAnnouncementDataArray", dataArray).apply();
+
+
+
+    }
+
+
+    public String  splitProtection(String original)
+    {
+        original = original.replace(",","<comma5582>");
+        original = original.replace("%","<percent6643>");
+        original = original.replace("NOTES","<notes6513>");
+        original = original.replace("ANNOUNCEMENTS","<announcements9235>");
+        original = original.replace("EVENTS","<events3321>");
+        return original;
     }
 
     public String  splitProtectionDeactivated(String original)
     {
         original = original.replace("<comma5582>",",");
         original = original.replace("<percent6643>","%");
-
+        original = original.replace("<notes6513>","NOTES");
+        original = original.replace("<announcements9235>","ANNOUNCEMENTS");
+        original = original.replace("<events3321>","EVENTS");
         return original;
+    }
+
+    private void hideOnScroll()
+    {
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.GONE);
+    }
+
+    private void showOnScroll()
+    {
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.VISIBLE);
+
+    }
+
+
+    public AbsListView.OnScrollListener onScrollListener() {
+        return new AbsListView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
+                                 int totalItemCount) {
+                if (firstVisibleItem == 0) {
+                    // check if we reached the top or bottom of the list
+                    View v = listViewGlobal.getChildAt(0);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the top: visible header and footer
+                        showOnScroll();
+                        Log.i("scrollLocation", "top reached");
+
+                    }
+                } else if (totalItemCount - visibleItemCount == firstVisibleItem) {
+                    View v = listViewGlobal.getChildAt(totalItemCount - 1);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the bottom: visible header and footer
+                        Log.i("scrollLocation", "bottom reached!");
+
+                    }
+                } else if (totalItemCount - visibleItemCount > firstVisibleItem){
+                    // on scrolling
+                    hideOnScroll();
+                    Log.i("scrollLocation", "on scroll");
+                }
+            }
+        };
+    }
+
+
+
+
+
+
+
+
+
+
+
+    //Color Check and onClicks
+
+
+    private void colorCheck() {
+
+        ImageView attendanceImageView = (ImageView) findViewById(R.id.attendance);
+        ImageView announcementImageView = (ImageView) findViewById(R.id.announcement);
+        ImageView notesImageView = (ImageView) findViewById(R.id.notes);
+        ImageView eventsImageView = (ImageView) findViewById(R.id.events);
+        ImageView profileImageView = (ImageView) findViewById(R.id.profile);
+
+
+        if (a == 0) {
+
+            attendanceImageView.setImageResource(R.drawable.attendance_grey);
+            announcementImageView.setImageResource(R.drawable.announcements);
+            notesImageView.setImageResource(R.drawable.notes);
+            eventsImageView.setImageResource(R.drawable.events);
+            profileImageView.setImageResource(R.drawable.newsfeed);
+
+        }
+        if (a == 1) {
+            attendanceImageView.setImageResource(R.drawable.attendance);
+            announcementImageView.setImageResource(R.drawable.announcements_grey);
+            notesImageView.setImageResource(R.drawable.notes);
+            eventsImageView.setImageResource(R.drawable.events);
+            profileImageView.setImageResource(R.drawable.newsfeed);
+        }
+
+        if (a == 2) {
+            attendanceImageView.setImageResource(R.drawable.attendance);
+            announcementImageView.setImageResource(R.drawable.announcements);
+            notesImageView.setImageResource(R.drawable.notes_grey);
+            eventsImageView.setImageResource(R.drawable.events);
+            profileImageView.setImageResource(R.drawable.newsfeed);
+        }
+
+        if (a == 3) {
+            attendanceImageView.setImageResource(R.drawable.attendance);
+            announcementImageView.setImageResource(R.drawable.announcements);
+            notesImageView.setImageResource(R.drawable.notes);
+            eventsImageView.setImageResource(R.drawable.events_grey);
+            profileImageView.setImageResource(R.drawable.newsfeed);
+        }
+
+        if (a == 4) {
+            attendanceImageView.setImageResource(R.drawable.attendance);
+            announcementImageView.setImageResource(R.drawable.announcements);
+            notesImageView.setImageResource(R.drawable.notes);
+            eventsImageView.setImageResource(R.drawable.events);
+            profileImageView.setImageResource(R.drawable.newsfeed_grey);
+        }
+
+
+    }
+    public void onClickAttendance(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,feedbackWriter.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickAnnouncement(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Viewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickNotes(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_notes_Viewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickEvents(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,EventViewer.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickProfile(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,Newsfeed.class);
+        startActivity(selectIntent);
+
+
+    }
+
+    public void onClickPlus(View v)
+    {
+        Intent selectIntent = new Intent(t_Announcement_Viewer.this,t_Announcement_Writer.class);
+        startActivity(selectIntent);
+
+
     }
 
 }

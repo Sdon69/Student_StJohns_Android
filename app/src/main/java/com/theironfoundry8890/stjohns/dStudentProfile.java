@@ -241,7 +241,7 @@ public class dStudentProfile extends Activity
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
-        mEditor.putString("Department", globalDepartment).commit();
+        mEditor.putString("Department", globalDepartment).apply();
 
     }
 

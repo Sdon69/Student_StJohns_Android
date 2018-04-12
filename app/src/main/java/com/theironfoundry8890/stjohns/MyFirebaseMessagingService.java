@@ -2,6 +2,7 @@ package com.theironfoundry8890.stjohns;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -53,25 +54,37 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
     public void generateNotification(String body) {
 
-        body = body.substring(body.indexOf("{message=") + 9 , body.lastIndexOf("}"));
-        Log.v("notificationText",body);
-        String bodyArray[] = body.split("<comma3384>");
+        if (body != null) {
+            body = body.substring(body.indexOf("{message=") + 9, body.lastIndexOf("}"));
+            Log.v("notificationText", body);
+            String bodyArray[] = body.split("<comma3384>");
 
-        String notificationTitle = bodyArray[0];
-        String notificationDescription = bodyArray[1];
+            String notificationTitle = bodyArray[0];
+            String notificationDescription = bodyArray[1];
 
 
-        NotificationManager notif=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notify= null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            notify = new Notification.Builder
-                    (getApplicationContext())
-                    .setContentTitle(notificationTitle)
-                    .setContentText(notificationDescription)
-                    .setSmallIcon(R.drawable.notification_icon).build();
+            NotificationManager notif = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification notify = null;
+            Intent notifyIntent = new Intent(this, Newsfeed.class);
+// Set the Activity to start in a new, empty task
+            notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+            // Create the PendingIntent
+            PendingIntent notifyPendingIntent = PendingIntent.getActivity(
+                    this, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT
+            );
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                notify = new Notification.Builder
+                        (getApplicationContext())
+                        .setContentTitle(notificationTitle)
+                        .setContentText(notificationDescription)
+                        .setContentIntent(notifyPendingIntent)
+                        .setSmallIcon(R.drawable.notification_icon).build();
+            }
+
+            notify.flags |= Notification.FLAG_AUTO_CANCEL;
+            notif.notify(0, notify);
         }
-
-        notify.flags |= Notification.FLAG_AUTO_CANCEL;
-        notif.notify(0, notify);
     }
 }

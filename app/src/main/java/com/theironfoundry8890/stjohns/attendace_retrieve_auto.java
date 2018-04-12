@@ -1049,7 +1049,7 @@ public class attendace_retrieve_auto extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
+        mEditor.putString("tag", sId).apply();
         Log.v("Saved data" , sId);
     }
 

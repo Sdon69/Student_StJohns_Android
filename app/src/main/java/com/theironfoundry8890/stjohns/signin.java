@@ -236,7 +236,7 @@ public class signin extends Activity
 
                         userId = accountName;
                         //save User Email Id
-                        SharedPreferences mPrefs = getSharedPreferences("label", 0);SharedPreferences.Editor mEditor = mPrefs.edit();mEditor.putString("UserId", userId).commit();
+                        SharedPreferences mPrefs = getSharedPreferences("label", 0);SharedPreferences.Editor mEditor = mPrefs.edit();mEditor.putString("UserId", userId).apply();
 
                         SharedPreferences settings =
                                 getPreferences(Context.MODE_PRIVATE);
@@ -668,38 +668,38 @@ public class signin extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
-        mEditor.putString("pass", sPassword).commit();
+        mEditor.putString("tag", sId).apply();
+        mEditor.putString("pass", sPassword).apply();
 
 
 
         //First Name
-        mEditor.putString("FirstName", dFName).commit();
+        mEditor.putString("FirstName", dFName).apply();
 
         // Last Name
-        mEditor.putString("LastName", dLName).commit();
+        mEditor.putString("LastName", dLName).apply();
 
         //Section
-        mEditor.putString("Section", dSection).commit();
+        mEditor.putString("Section", dSection).apply();
 
         //Class
-        mEditor.putString("Class", dClass).commit();
+        mEditor.putString("Class", dClass).apply();
 
         //Phone No
-        mEditor.putString("Phone", dPhone).commit();
+        mEditor.putString("Phone", dPhone).apply();
 
         //Email
-        mEditor.putString("Email", dEmail).commit();
+        mEditor.putString("Email", dEmail).apply();
 
 
-        mEditor.putString("Semester", dSemester ).commit();
+        mEditor.putString("Semester", dSemester ).apply();
 
         //Saving Signed in before or not
-        mEditor.putBoolean("Virgin" , sVirginity).commit();
+        mEditor.putBoolean("Virgin" , sVirginity).apply();
 
         boolean use = false;
 
-        mEditor.putBoolean("firstUse", use).commit();
+        mEditor.putBoolean("firstUse", use).apply();
 
 
 
@@ -716,7 +716,7 @@ public class signin extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("UserId", userId).commit();
+        mEditor.putString("UserId", userId).apply();
 
     }
 

@@ -903,7 +903,7 @@ public class t_Announcement_Writer extends Activity
 
 
 
-        mEditor.putString("AnnSheetId", tableIds[tableNo]).commit();
+        mEditor.putString("AnnSheetId", tableIds[tableNo]).apply();
 
         gSavedAnnSheetId = tableIds[tableNo];
 

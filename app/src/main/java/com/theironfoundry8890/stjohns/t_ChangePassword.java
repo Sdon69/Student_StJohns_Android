@@ -705,20 +705,20 @@ public class t_ChangePassword extends Activity
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
         //First Name
-        mEditor.putString("tFirstName", sFName).commit();
+        mEditor.putString("tFirstName", sFName).apply();
 
         // Last Name
-        mEditor.putString("tLastName", sLName).commit();
+        mEditor.putString("tLastName", sLName).apply();
 
-        mEditor.putString("tpass", tPass).commit();
+        mEditor.putString("tpass", tPass).apply();
 
 
 
         //Phone No
-        mEditor.putString("tPhone", sPhone).commit();
+        mEditor.putString("tPhone", sPhone).apply();
 
         //Email
-        mEditor.putString("tEmail", sEmail).commit();
+        mEditor.putString("tEmail", sEmail).apply();
 
 
 

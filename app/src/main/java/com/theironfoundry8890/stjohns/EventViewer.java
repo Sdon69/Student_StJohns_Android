@@ -15,14 +15,17 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -45,28 +48,24 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static com.theironfoundry8890.stjohns.R.id.pass;
+
 
 public class EventViewer extends Activity
         implements EasyPermissions.PermissionCallbacks {
     GoogleAccountCredential mCredential;
     private Button mCallApiButton;
     ProgressDialog mProgress;
-    private String sFName;
-    private String sLName;
-    private String sClass;
-    private String sEmail;
-    private String sSection;
     private String sId = "hello";
-    private String sPhone;
     private TextView mOutputText;
-    private String sPassword;private String userId;
+    private String userId;
     private boolean idAvailcheck = true;
+    private ListView listViewGlobal;
 
     private int a = 3;
     private float x1,x2;
@@ -79,16 +78,17 @@ public class EventViewer extends Activity
     private String eventDate;
     private String lastDateofRegistration;
     private String fees;
-    final ArrayList<Word> words = new ArrayList<Word>();
 
-    private String dFName;
-    private String dLName;
-    private String dClass;
-    private String dEmail;
-    private String dSection;
-    private String dId;
-    private String dPassword;
-    private String dPhone;
+
+
+    private String mode = "timestampViewer" ;
+    private boolean isViewerTimestampUpdated = false;
+    private String globalDataArrayString;
+    private boolean retrievingDataEnd = false;
+    private String viewerTimestamp;
+    private String viewerTimestampHolder;
+    final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
+    final ArrayList<newsfeedPublic> viewerArrayList = new ArrayList<newsfeedPublic>();
 
 
     private String cataegories;
@@ -156,12 +156,6 @@ public class EventViewer extends Activity
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.genre_arrays, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         deptSpinner.setAdapter(adapter);
-//
-//        WebView myWebView = (WebView) findViewById(R.id.webview);
-//        myWebView.setWebViewClient(new WebViewClient());
-//        myWebView.loadUrl("https://www.google.co.in/?gfe_rd=cr&dcr=0&ei=z6mnWu_MG4Pm8we9wJrQCw");
-//        WebSettings webSettings = myWebView.getSettings();
-//        webSettings.setJavaScriptEnabled(true);
 
 
         // Initialize credentials and service object.
@@ -169,7 +163,18 @@ public class EventViewer extends Activity
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
         loadData();
+        loadDataArray();
 
+
+        loadDataForList();
+        if(!globalDataArrayString.equals("unknown"))
+        {
+
+            sortDataByDate(globalDataArrayString);
+            EventList();
+        }
+
+        getResultsFromApi();
 
 
     }
@@ -211,8 +216,7 @@ public class EventViewer extends Activity
     private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS)) {
-            SharedPreferences mPrefs = getSharedPreferences("label", 0);userId = mPrefs.getString("UserId", "default_value_if_variable_not_found");
-            String accountName = userId;
+            SharedPreferences mPrefs = getSharedPreferences("label", 0);userId = mPrefs.getString("UserId", "default_value_if_variable_not_found");Log.v("accountName", String.valueOf(userId));String accountName = userId;
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
                 getResultsFromApi();
@@ -342,7 +346,7 @@ public class EventViewer extends Activity
                 GoogleApiAvailability.getInstance();
         final int connectionStatusCode =
                 apiAvailability.isGooglePlayServicesAvailable(this);
-
+        Log.v("EventViewer" , "Success");
         return connectionStatusCode == ConnectionResult.SUCCESS;
 
     }
@@ -417,18 +421,16 @@ public class EventViewer extends Activity
          * @throws IOException
          */
         private List<String> getDataFromApi() throws IOException {
-            String spreadsheetId = "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw";
+            String spreadsheetId = sheetsIdCollection.getEventSheetId();
             int a = 2;
             idAvailcheck = true;
             String range = "Events!".concat("A"+ a++ + ":S");
             end = false;
 
 
-            List<List<Object>> arrData = getData(title,description );
-
             ValueRange oRange = new ValueRange();
             oRange.setRange(range); // I NEED THE NUMBER OF THE LAST ROW
-            oRange.setValues(arrData);
+
 
 
             List<ValueRange> oList = new ArrayList<>();
@@ -441,6 +443,11 @@ public class EventViewer extends Activity
 
 
 
+            if(mode.equals("timestampViewer"))
+            {
+                spreadsheetId= sheetsIdCollection.getMiscSheetId(); //1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU
+                range = "Timestamp!".concat("A"+ 2 + ":B");
+            }
 
 
             List<String> results = new ArrayList<String>();
@@ -449,7 +456,7 @@ public class EventViewer extends Activity
                     .execute();
             List<List<Object>> values = response.getValues();
             if (values != null) {
-
+                Log.v("MainActivity", "Wofdad");
 
                 results.add("");
 
@@ -460,55 +467,76 @@ public class EventViewer extends Activity
 
 
 
+                    if(mode.equals("timestampViewer")) {
+                        String modeRetrieved = String.valueOf(row.get(0));
+                        Log.v("modeRetrieved",modeRetrieved);
+                        if (modeRetrieved.equals("eventViewer")) {
+                            String timeStamp = String.valueOf(row.get(1));
+                            isViewerTimestampUpdated =
+                                    timestampCompare(timeStamp, viewerTimestamp);
 
-
-
-
-
-                    String str1 = String.valueOf(row.get(0));
-
-                    if (str1.contains("BonBlank88"))
-                    {
-
-                        end = true;
-
-                        continue;
-                    }
-
-
-
-
-
-
-                    status = String.valueOf(row.get(9));
-
-
-
-
-                    if(status.equals("A")) {
-                        cataegories = String.valueOf(row.get(6));
-
-
-                        if (cataegories.contains(dept_filter)) {
-
-                            title = String.valueOf(row.get(0));
-                            description = String.valueOf(row.get(1));
-
-                            String fullName = String.valueOf(row.get(8));
-                            publishDate = String.valueOf(row.get(2));
-                            eventDate = String.valueOf(row.get(3));
-                            lastDateofRegistration = String.valueOf(row.get(4));
-                            fees = String.valueOf(row.get(5));
-                            fees = " ₹".concat(fees);
-
-
-
-                            words.add(new Word(description, title, publishDate, eventDate, lastDateofRegistration, fees, fullName));
+                            viewerTimestampHolder = timeStamp;
                         }
+                    }else if(mode.equals("viewer")) {
+
+                        String timeStamp = String.valueOf(row.get(11));
+                        Log.v("timeStamp",timeStamp);
+
+                        if (Integer.parseInt(timeStamp) <= Integer.parseInt(viewerTimestamp))
+                            continue;
+
+
+                        String str1 = String.valueOf(row.get(0));
+
+                        if (str1.contains("BonBlank88")) {
+
+                            end = true;
+
+                            continue;
+                        }
+
+
+                        status = String.valueOf(row.get(9));
+
+                        Log.v("status", status);
+
+
+                        if (status.equals("A")) {
+                            cataegories = String.valueOf(row.get(6));
+
+
+                            if (cataegories.contains(dept_filter)) {
+
+                                title = String.valueOf(row.get(0));
+                                description = String.valueOf(row.get(1));
+                                Log.v("descr", description);
+                                String fullName = String.valueOf(row.get(8));
+                                publishDate = String.valueOf(row.get(2));
+                                eventDate = String.valueOf(row.get(3));
+                                lastDateofRegistration = String.valueOf(row.get(4));
+                                fees = String.valueOf(row.get(5));
+                                fees = " ₹".concat(fees);
+
+
+                                description = splitProtection(description);
+                                title = splitProtection(title);
+                                cataegories = splitProtection(cataegories);
+                                publishDate = splitProtection(publishDate);
+                                eventDate = splitProtection(eventDate);
+                                lastDateofRegistration = splitProtection(lastDateofRegistration);
+                                fees = splitProtection(fees);
+                                fullName = splitProtection(fullName);
+                                timeStamp = splitProtection(timeStamp);
+
+
+                                Log.v("Departments", dept_filter);
+                                viewerArrayList.add(new newsfeedPublic(description, title, publishDate, eventDate,
+                                        lastDateofRegistration, fees, fullName, "EVENTS", timeStamp));
+                            }
+                        }
+
+
                     }
-
-
-
 
 
 
@@ -522,7 +550,6 @@ public class EventViewer extends Activity
 
 
                 }
-
 
 
 
@@ -542,35 +569,54 @@ public class EventViewer extends Activity
 
         @Override
         protected void onPreExecute() {
-            mOutputText.setText("");
-            mProgress.show();
 
-
-
+            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+            loadingCircle.setVisibility(View.VISIBLE);
         }
 
 
 
         @Override
         protected void onPostExecute(List<String> output) {
-            mProgress.hide();
+
             if (output == null || output.size() == 0) {
                 mOutputText.setText("No results returned.");
-
+                Log.v("EventViewer" , "damn");
             } else {
-                output.add(0, " ");
-                mOutputText.setText(TextUtils.join("\n", output));
+
 
                 end = true;
-                EventList();
 
+                if(mode.equals("timestampViewer")) {
+
+
+                    if (isViewerTimestampUpdated) {
+                        mode = "viewer";
+                        getResultsFromApi();
+                    }else
+                    {
+                        EventList();
+                        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                        loadingCircle.setVisibility(View.GONE);
+                    }
+                }else if(mode.equals("viewer")) {
+                    retrievingDataEnd = true;
+                    if(globalDataArrayString.equals("unknown"))
+                        postViewerMode();
+                }
+
+                if(retrievingDataEnd) {
+                    if (isViewerTimestampUpdated)
+                        postViewerMode();
+                }
+                EventList();
 
             }
         }
 
         @Override
         protected void onCancelled() {
-            mProgress.hide();
+
 
             if (mLastError != null) {
                 if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
@@ -582,11 +628,34 @@ public class EventViewer extends Activity
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
                             EventViewer.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
+
 
                     end = true;
+
+                    if(mode.equals("timestampViewer")) {
+
+
+                        if (isViewerTimestampUpdated) {
+                            mode = "viewer";
+                            getResultsFromApi();
+                        }else
+                        {
+                            EventList();
+                            ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+                            loadingCircle.setVisibility(View.GONE);
+                        }
+                    }else if(mode.equals("viewer")) {
+                        retrievingDataEnd = true;
+                        if(globalDataArrayString.equals("unknown"))
+                            postViewerMode();
+                    }
+
+                    if(retrievingDataEnd) {
+                        if (isViewerTimestampUpdated)
+                            postViewerMode();
+                    }
                     EventList();
+
                 }
             } else {
                 mOutputText.setText("Request cancelled.");
@@ -594,17 +663,6 @@ public class EventViewer extends Activity
         }
     }
 
-    private void Go(List<String> output) {
-        mProgress.hide();
-        if (output == null || output.size() == 0) {
-            mOutputText.setText("No results returned.");
-        } else {
-            output.add(0, "Data retrieved using the Google Sheets API:");
-            mOutputText.setText(TextUtils.join("\n", output));
-
-
-        }
-    }
 
     public void onClick2(View v) {
 
@@ -614,20 +672,6 @@ public class EventViewer extends Activity
 
     }
 
-    public static List<List<Object>> getData (String id , String passString )  {
-
-        List<Object> data1 = new ArrayList<Object>();
-        data1.add(id);
-        data1.add(pass);
-
-
-
-
-        List<List<Object>> data = new ArrayList<List<Object>>();
-        data.add (data1);
-
-        return data;
-    }
 
 
 
@@ -636,27 +680,7 @@ public class EventViewer extends Activity
 
 
 
-    public void displayStudentInfo()
-    {
-        TextView fName = (TextView) findViewById(R.id.pFirstName);
-        TextView lName = (TextView) findViewById(R.id.pLastName);
-        TextView tclass = (TextView) findViewById(R.id.pClass);
-        TextView section = (TextView) findViewById(R.id.pSection);
-        TextView Email = (TextView) findViewById(R.id.pEmail);
-        TextView Phone = (TextView) findViewById(R.id.pPhoneNo);
-        TextView id = (TextView) findViewById(R.id.pUser_id);
-        TextView publishDate = (TextView) findViewById(R.id.date_published);
 
-
-        fName.setText(dFName);
-        lName.setText(dLName);
-        tclass.setText(dClass);
-        section.setText(dSection);
-        Email.setText(dEmail);
-        Phone.setText(dPhone);
-        id.setText(dId);
-
-    }
 
 
     public void saveData(){
@@ -664,53 +688,39 @@ public class EventViewer extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        mEditor.putString("tag", sId).commit();
-
+        mEditor.putString("tag", sId).apply();
+        Log.v("Saved data" , sId);
     }
 
     public void loadData(){
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         String idString = mPrefs.getString("tag", "default_value_if_variable_not_found");
-        String passString = mPrefs.getString("tag", "default_value_if_variable_not_found");
-        sId = idString;
-        sPassword = passString;
 
-        mOutputText.setText("");
-        getResultsFromApi();
+        sId = idString;
+
+
 
     }
 
     public void EventList(){
 
+        newsfeedAdapter adapter = new newsfeedAdapter(this, words);
 
 
-
-
-
-
-
-
-
-
-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The
-        // adapter knows how to create list items for each item in the list.
-        EventsAdapter adapter = new EventsAdapter(this, words);
-
-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.
-        // There should be a {@link ListView} with the view ID called list, which is declared in the
-        // activity_numbers.xml layout file.
         ListView listView = (ListView) findViewById(R.id.list);
 
-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the
-        // {@link ListView} will display list items for each {@link Word} in the list.
+
         listView.setAdapter(adapter);
+        listViewGlobal = listView;
+
+        listViewGlobal.setOnScrollListener(onScrollListener());
 
         if(end) {
 
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                    Word word = words.get(position);
+                    newsfeedPublic word = words.get(position);
 
                     //Get on clicked data
                     String exTitle = word.getMiwokTranslation();
@@ -727,13 +737,14 @@ public class EventViewer extends Activity
                     //Save Data
                     SharedPreferences mPrefs = getSharedPreferences("label", 0);
                     SharedPreferences.Editor mEditor = mPrefs.edit();
-                    mEditor.putString("title", exTitle).commit();
-                    mEditor.putString("desc", exDesc).commit();
-                    mEditor.putString("publishDate", exPublishDate).commit();
-                    mEditor.putString("eventDate", exEventDate).commit();
-                    mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).commit();
-                    mEditor.putString("fees", exFees).commit();
-                    mEditor.putString("fullName", exFullName).commit();
+                    mEditor.putString("title", exTitle).apply();
+                    mEditor.putString("desc", exDesc).apply();
+                    mEditor.putString("publishDate", exPublishDate).apply();
+                    mEditor.putString("eventDate", exEventDate).apply();
+                    mEditor.putString("lastDateOfRegistration", exLastDateofRegistation).apply();
+                    mEditor.putString("fees", exFees).apply();
+                    mEditor.putString("fullName", exFullName).apply();
+                    Log.v("done","done");
 
 
 
@@ -756,7 +767,25 @@ public class EventViewer extends Activity
         Spinner deptSpinner = (Spinner) findViewById(R.id.spinner_dept);
         dept_filter = String.valueOf(deptSpinner.getSelectedItem());
 
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("savedDepartmentEvent", dept_filter).apply();
+
+
+
         words.clear();
+        viewerArrayList.clear();
+        mEditor.putString("savedEventTimestamp", "1521000000").apply();
+        mEditor.putString("savedIndividualEventDataArray", "unknown").apply();
+        viewerTimestamp = "1521000000";
+        globalDataArrayString = "unknown";
+        viewerTimestampHolder = "1521000000";
+        mode = "timestampViewer";
+        isViewerTimestampUpdated = false;
+        retrievingDataEnd = false;
+        EventList();
 
 
         mOutputText.setText("");
@@ -770,15 +799,355 @@ public class EventViewer extends Activity
 
     }
 
-    public void onClickPlus(View v)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void hideOnScroll()
     {
-        Intent selectIntent = new Intent(EventViewer.this,t_EventWriter.class);
-        startActivity(selectIntent);
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.GONE);
+    }
+
+    private void showOnScroll()
+    {
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.filterBar);
+        filterBar.setVisibility(View.VISIBLE);
+
+    }
+
+
+
+    //Saved listView functions
+
+
+    public boolean timestampCompare(String timestampRetrieved, String timestampStored){
+
+
+        return !timestampRetrieved.equals(timestampStored);
+
+    }
+
+    public void loadDataArray(){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        globalDataArrayString = mPrefs.getString("savedIndividualEventDataArray", "unknown");
 
 
     }
 
 
+    public void postViewerMode()
+    {
+
+        String newsfeedAnnouncementsString;
+        newsfeedAnnouncementsString = viewerArrayList.toString().replace("[","");
+        newsfeedAnnouncementsString = newsfeedAnnouncementsString.replace("]","");
+        String storedData;
+        String dataRetrieved ="";
+        if(globalDataArrayString.equals("unknown")) {
+
+            storedData = "[";
+
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved +  newsfeedAnnouncementsString;
+
+
+        }else
+        {
+            if(newsfeedAnnouncementsString.length()>5)
+                dataRetrieved = dataRetrieved + "," +  newsfeedAnnouncementsString;
+            storedData =  globalDataArrayString.replace("]","");
+        }
+        viewerTimestamp = viewerTimestampHolder;
+
+
+
+
+        saveTimestamps();
+
+
+
+
+        String concatenatedData =  storedData + dataRetrieved + "]";
+
+        int maxLogSize = 1000;
+        for(int i = 0; i <= concatenatedData.length() / maxLogSize; i++) {
+            int start = i * maxLogSize;
+            int end = (i+1) * maxLogSize;
+            end = end > concatenatedData.length() ? concatenatedData.length() : end;
+        }
+
+
+
+        sortDataByDate(concatenatedData);
+//        mProgress.hide();
+        EventList();
+        ProgressBar loadingCircle = (ProgressBar) findViewById(R.id.loadingCircle);
+        loadingCircle.setVisibility(View.GONE);
+
+//        hideLoading();
+
+    }
+    public void sortDataByDate(String dateRetrieved)
+    {
+        saveDataArray(dateRetrieved);
+
+
+        String trimmedString = dateRetrieved.replace("[","");
+        trimmedString = trimmedString.replace("]","");
+
+        trimmedString = trimmedString.replace(" NOTES","NOTES");
+        trimmedString = trimmedString.replace(" ANNOUNCEMENTS","ANNOUNCEMENTS");
+        trimmedString = trimmedString.replace(" EVENTS","EVENTS");
+
+
+
+        String dateArray[] = trimmedString.split(",");
+        String elementArray[];
+        String elementMode;
+
+
+
+        int i;
+
+        int latestIndex = 0;
+
+        String transferArray[] = {"hello","hello"};
+
+
+
+        words.clear();
+        for(i=0;i<dateArray.length;i++) {
+
+            String latestDate;
+
+            elementArray = dateArray[i].split("%");
+            elementMode = elementArray[0];
+
+
+
+            if (elementMode.contains("ANNOUNCEMENTS") || elementMode.contains("NOTES")) {
+                latestDate = elementArray[9];
+
+            } else if (elementMode.contains("EVENTS")) {
+                latestDate = elementArray[8];
+            } else {
+                break;
+            }
+//
+
+
+            int k = i;
+
+            for (k = k; k < dateArray.length; k++) {
+                latestDate = latestDate.trim();
+                int latestTimestamp = Integer.parseInt(latestDate);
+
+
+                elementArray = dateArray[k].split("%");
+                elementMode = elementArray[0];
+                String challengeDate = "o";
+                if (elementMode.equals("ANNOUNCEMENTS") || elementMode.equals("NOTES")) {
+                    challengeDate = elementArray[9];
+
+                } else if (elementMode.equals("EVENTS")) {
+                    challengeDate = elementArray[8];
+                } else {
+                    break;
+                }
+
+
+                challengeDate = challengeDate.trim();
+                int challengeTimestamp = Integer.parseInt(challengeDate);
+
+
+
+                boolean lastestDayIsPast = false;
+
+                if(challengeTimestamp >= latestTimestamp )
+                    lastestDayIsPast = true;
+
+//
+                if (lastestDayIsPast) {
+
+                    latestDate = challengeDate;
+                    latestIndex = k;
+
+                }
+
+
+
+
+            }
+
+
+
+            transferArray[0] = dateArray[i];
+            dateArray[i] = dateArray[latestIndex];
+
+            dateArray[latestIndex] = transferArray[0];
+
+
+            if(i==dateArray.length) {
+
+                elementArray = dateArray[dateArray.length - 2].split("%");
+
+            }
+            else
+            {
+                elementArray = dateArray[i].split("%");
+            }
+
+
+
+
+            elementMode = elementArray[0];
+            String element0 = splitProtectionDeactivated(elementArray[0]);
+            String element1 = splitProtectionDeactivated(elementArray[1]);
+            String element2 = splitProtectionDeactivated(elementArray[2]);
+            String element3 = splitProtectionDeactivated(elementArray[3]);
+            String element4 = splitProtectionDeactivated(elementArray[4]);
+            String element5 = splitProtectionDeactivated(elementArray[5]);
+            String element6 = splitProtectionDeactivated(elementArray[6]);
+            String element7 = splitProtectionDeactivated(elementArray[7]);
+            String element8 = splitProtectionDeactivated(elementArray[8]);
+
+
+
+            if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
+
+                String element9 = splitProtectionDeactivated(elementArray[9]);
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element8, element0,element9));
+            } else {
+
+                words.add(new newsfeedPublic(element1, element2, element3, element4,
+                        element5, element6, element7
+                        , element0,element8));
+            }
+
+
+        }
+
+
+
+
+
+
+    }
+    public void saveTimestamps()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("savedEventTimestamp", viewerTimestamp).apply();
+
+    }
+
+
+    public void loadDataForList(){
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+
+        dept_filter =  mPrefs.getString("savedDepartmentEvent", "All Events");
+
+
+        viewerTimestamp = mPrefs.getString("savedEventTimestamp", "1521000000");
+
+
+        Spinner semesterSpinner = (Spinner) findViewById(R.id.spinner_semesters);
+        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_dept);
+
+        departmentSpinner.setSelection(((ArrayAdapter)departmentSpinner.getAdapter()).getPosition(dept_filter));
+    }
+
+    public void saveDataArray(String dataArray){
+
+
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+
+        mEditor.putString("savedIndividualEventDataArray", dataArray).apply();
+
+
+    }
+
+
+
+
+    public String  splitProtection(String original)
+    {
+        original = original.replace(",","<comma5582>");
+        original = original.replace("%","<percent6643>");
+        original = original.replace("NOTES","<notes6513>");
+        original = original.replace("ANNOUNCEMENTS","<announcements9235>");
+        original = original.replace("EVENTS","<events3321>");
+        return original;
+    }
+
+    public String  splitProtectionDeactivated(String original)
+    {
+        original = original.replace("<comma5582>",",");
+        original = original.replace("<percent6643>","%");
+        original = original.replace("<notes6513>","NOTES");
+        original = original.replace("<announcements9235>","ANNOUNCEMENTS");
+        original = original.replace("<events3321>","EVENTS");
+        return original;
+    }
+
+
+    public AbsListView.OnScrollListener onScrollListener() {
+        return new AbsListView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
+                                 int totalItemCount) {
+                if (firstVisibleItem == 0) {
+                    // check if we reached the top or bottom of the list
+                    View v = listViewGlobal.getChildAt(0);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the top: visible header and footer
+                        showOnScroll();
+                        Log.i("scrollLocation", "top reached");
+
+                    }
+                } else if (totalItemCount - visibleItemCount == firstVisibleItem) {
+                    View v = listViewGlobal.getChildAt(totalItemCount - 1);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the bottom: visible header and footer
+                        Log.i("scrollLocation", "bottom reached!");
+
+                    }
+                } else if (totalItemCount - visibleItemCount > firstVisibleItem){
+                    // on scrolling
+                    hideOnScroll();
+                    Log.i("scrollLocation", "on scroll");
+                }
+            }
+        };
+    }
+
+
+    //Color Check and onClick Functions Below
     public void onClickAttendance(View v)
     {
         Intent selectIntent = new Intent(EventViewer.this,feedbackWriter.class);
@@ -818,10 +1187,6 @@ public class EventViewer extends Activity
 
 
     }
-
-
-
-
 
 
     private void colorCheck() {
@@ -877,21 +1242,4 @@ public class EventViewer extends Activity
 
 
     }
-
-    private void deviceOffline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(R.drawable.no_connection);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.listinflater);
-        listviewer.setVisibility(View.INVISIBLE);
-    }
-
-    private void deviceOnline()
-    {
-        LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
-        activityLayout.setBackgroundResource(0);
-        RelativeLayout listviewer = (RelativeLayout) findViewById(R.id.listinflater);
-        listviewer.setVisibility(View.VISIBLE);
-    }
-
 }

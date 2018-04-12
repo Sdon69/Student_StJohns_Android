@@ -893,7 +893,7 @@ public class t_notes_writer extends Activity
 
 
 
-        mEditor.putString("tableSheetId", tableIds[tableNo]).commit();
+        mEditor.putString("tableSheetId", tableIds[tableNo]).apply();
 
         gSavedTableSheetId = tableIds[tableNo];
 

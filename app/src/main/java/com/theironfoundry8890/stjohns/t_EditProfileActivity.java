@@ -40,6 +40,8 @@ import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -722,22 +724,24 @@ public class t_EditProfileActivity extends Activity
     public void saveData()  // Saves data and returns to profile
     {
 
+
+
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
 
         //First Name
-        mEditor.putString("tFirstName", sFName).commit();
+        mEditor.putString("tFirstName", sFName).apply();
 
         // Last Name
-        mEditor.putString("tLastName", sLName).commit();
+        mEditor.putString("tLastName", sLName).apply();
 
 
 
         //Phone No
-        mEditor.putString("tPhone", sPhone).commit();
+        mEditor.putString("tPhone", sPhone).apply();
 
         //Email
-        mEditor.putString("tEmail", sEmail).commit();
+        mEditor.putString("tEmail", sEmail).apply();
 
         Intent selectIntent = new Intent(t_EditProfileActivity.this,Newsfeed.class);
         startActivity(selectIntent);

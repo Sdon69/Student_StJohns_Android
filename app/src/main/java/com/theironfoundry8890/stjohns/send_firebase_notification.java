@@ -31,16 +31,16 @@ public class send_firebase_notification  {
 
     public static void sendGcmMessage(String messageTitle, String messageBody)
     {
-        messageTitle =   messageTitle.replace("<comma3384>",".");
-        messageBody =   messageBody.replace("<comma3384>",".");
-        String envelope = messageTitle + "<comma3384>"  + messageBody;
+        if(messageTitle!=null || messageBody!=null) {
+            messageTitle = messageTitle.replace("<comma3384>", ".");
+            messageBody = messageBody.replace("<comma3384>", ".");
+            String envelope = messageTitle + "<comma3384>" + messageBody;
 
-        new RetrieveFeedTask().execute(envelope);
+            new RetrieveFeedTask().execute(envelope);
 
 
-
+        }
     }
-
 
     static class RetrieveFeedTask extends AsyncTask<String, Void, String> {
 

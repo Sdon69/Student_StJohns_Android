@@ -45,6 +45,7 @@ import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -786,9 +787,6 @@ public class s_EditProfileActivity extends Activity
             tSection = sSection;
 
 
-        }else
-        {
-            sDepartment = "department";
         }
 
 
@@ -919,6 +917,7 @@ public class s_EditProfileActivity extends Activity
         String Section = mPrefs.getString("Section", "default_value_if_variable_not_found");
         String Class = mPrefs.getString("Class", "default_value_if_variable_not_found");
         String Semester = mPrefs.getString("Semester", "default_value_if_variable_not_found");
+        String department =  mPrefs.getString("Department", "unknown");
 
 
 
@@ -939,7 +938,7 @@ public class s_EditProfileActivity extends Activity
         sSemester = tSemester;
         sClass = tClass;
         sSection = tSection;
-
+        sDepartment  = department;
 
 
 
@@ -1002,34 +1001,46 @@ public class s_EditProfileActivity extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
+        String retrievedDepartment =  mPrefs.getString("Department", "unknown");
+        String retrievedSemester = mPrefs.getString("Semester","default_value_if_variable_not_found");
+        Log.v("unsubscribe from ",retrievedDepartment+retrievedSemester );
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(retrievedDepartment+retrievedSemester);
+        mEditor.putString("dataArray", "unknown").apply();
+        mEditor.putString("newsfeedNotesTimestamp", "1521000000").apply();
+        mEditor.putString("newsfeedAnnouncementTimestamp", "1521000000").apply();
+        mEditor.putString("newsfeedEventTimestamp", "1521000000").apply();
+        mEditor.putString("newsfeedVideoInfoViewerTimestamp", "1521000000").apply();
+
+        //First Name
+        mEditor.putString("tag", tid).apply();
+        mEditor.putString("pass", tPass).apply();
+
 
 
         //First Name
-        mEditor.putString("tag", tid).commit();
-        mEditor.putString("pass", tPass).commit();
-
-
-
-        //First Name
-        mEditor.putString("FirstName", sFName).commit();
+        mEditor.putString("FirstName", sFName).apply();
 
         // Last Name
-        mEditor.putString("LastName", sLName).commit();
+        mEditor.putString("LastName", sLName).apply();
 
         //Section
-        mEditor.putString("Section", tSection).commit();
+        mEditor.putString("Section", tSection).apply();
 
         //Class
-        mEditor.putString("Class", tClass).commit();
+        mEditor.putString("Class", tClass).apply();
 
         //Phone No
-        mEditor.putString("Phone", sPhone).commit();
+        mEditor.putString("Phone", sPhone).apply();
 
         //Email
-        mEditor.putString("Email", sEmail).commit();
+        mEditor.putString("Email", sEmail).apply();
 
 
-        mEditor.putString("Semester", sSemester ).commit();
+        mEditor.putString("Semester", sSemester ).apply();
+
+        mEditor.putString("Department",sDepartment);
+        Log.v("subscribe to ",sDepartment+sSemester );
+        FirebaseMessaging.getInstance().subscribeToTopic(sDepartment+sSemester);
 
         Intent selectIntent = new Intent(s_EditProfileActivity.this,dStudentProfile.class);
         startActivity(selectIntent);

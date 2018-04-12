@@ -16,30 +16,30 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
-
-
+        android:id="@+id/filterBar"
 
         >
 
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_weight="1"
+            android:layout_weight="1.2"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
             <Spinner
                 android:id="@+id/spinner_dept"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/dept_arrays"
                 android:prompt="@string/country_prompt"
+
 
                 />
 
             <Spinner
                 android:id="@+id/spinner_semesters"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/semester_arrays"
                 android:prompt="@string/country_prompt"
@@ -56,7 +56,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
             >
 
 
@@ -78,6 +80,15 @@
     <View android:layout_width="match_parent"
         android:layout_height="10dp"
         android:background="#FFFFFF" />
+
+
+    <ProgressBar
+
+        android:id="@+id/loadingCircle"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"/>
+
 
 
     <RelativeLayout
@@ -109,202 +120,39 @@
 
         </LinearLayout>
 
-      <!--  <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
+
+
+        <!--<RelativeLayout-->
+        <!--android:layout_width="80dp"-->
+        <!--android:layout_height="40dp"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--android:layout_above="@+id/add_video"-->
+        <!--android:background="@drawable/curved_rect"-->
+        <!--android:layout_marginBottom="12dp"-->
+        <!--&gt;-->
+        <!--<TextView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_toLeftOf="@+id/videoCheckbox"-->
+        <!--android:text="Video"-->
+        <!--android:textColor="@color/colorPrimary"-->
+        <!--android:textStyle="bold"-->
+        <!--android:layout_marginTop="8dp"/>-->
+        <!--<CheckBox-->
+        <!--android:id="@+id/videoCheckbox"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentRight="true"-->
+        <!--/>-->
+
+        <!--</RelativeLayout>-->
+
+
+        <include
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/navbar"
-            android:layout_alignParentRight="true"
-            android:layout_margin="20dp"
-
-            android:onClick="onClickPlus"
-            android:src="@drawable/plusfloat"
-            android:background="@drawable/empty"
-
-            app:fabSize="normal"
-            /> -->
-
-        <LinearLayout
-            android:id="@+id/navbar"
-            android:layout_width="match_parent"
-            android:layout_height="65dp"
+            layout="@layout/mainmenuui"
             android:layout_alignParentBottom="true"
-            android:background="@drawable/whitebg"
-            android:orientation="horizontal"
-
-            >
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingBottom="8dp"
-                android:paddingLeft="4dp"
-                android:paddingRight="4dp"
-                android:paddingTop="8dp">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_weight="1"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="onClickAttendance"
-                    android:orientation="vertical"
-
-
-                    >
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:id="@+id/attendance"
-                        android:src="@drawable/attendance" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="0.5"
-                        android:paddingLeft="1dp"
-                        android:paddingRight="1dp"
-                        android:text="Feedback"
-                        android:textAlignment="center"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_weight="1"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="onClickAnnouncement"
-                    android:orientation="vertical"
-
-
-                    >
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:id="@+id/announcement"
-                        android:src="@drawable/announcements" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="0.5"
-
-                        android:text="Announcements"
-                        android:textAlignment="center"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_weight="1"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="onClickNotes"
-                    android:orientation="vertical"
-
-                    >
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:id="@+id/notes"
-                        android:src="@drawable/notes" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="0.5"
-                        android:text="Notes"
-                        android:textAlignment="center"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_weight="1"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="onClickEvents"
-                    android:orientation="vertical"
-
-                    >
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:id="@+id/events"
-                        android:src="@drawable/events" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="0.5"
-                        android:text="Events"
-                        android:textAlignment="center"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_weight="1"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:onClick="onClickProfile"
-                    android:orientation="vertical"
-
-                    >
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:id="@+id/profile"
-                        android:src="@drawable/newsfeed" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="0dp"
-                        android:layout_gravity="center"
-                        android:layout_weight="0.5"
-                        android:text="Feed"
-                        android:textAlignment="center"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
+            />
     </RelativeLayout>
 </LinearLayout>
