@@ -6,7 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -20,6 +27,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         String TAG = "Message Recieved";
@@ -52,39 +60,98 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
     }
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void generateNotification(String body) {
+
+
+
+
+
 
         if (body != null) {
             body = body.substring(body.indexOf("{message=") + 9, body.lastIndexOf("}"));
             Log.v("notificationText", body);
             String bodyArray[] = body.split("<comma3384>");
+            String notificationTitle = "Title";
+            String notificationDescription = "Body";
+            if(bodyArray[0] != null)
+            {
+                 notificationTitle = bodyArray[0];
+            }
 
-            String notificationTitle = bodyArray[0];
-            String notificationDescription = bodyArray[1];
+
+            if(bodyArray[1] != null)
+            {
+                 notificationDescription = bodyArray[1];
+            }
 
 
-            NotificationManager notif = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            Notification notify = null;
+
+
             Intent notifyIntent = new Intent(this, Newsfeed.class);
+
+
 // Set the Activity to start in a new, empty task
             notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                     | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
+            Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             // Create the PendingIntent
             PendingIntent notifyPendingIntent = PendingIntent.getActivity(
                     this, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT
             );
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-                notify = new Notification.Builder
-                        (getApplicationContext())
-                        .setContentTitle(notificationTitle)
-                        .setContentText(notificationDescription)
-                        .setContentIntent(notifyPendingIntent)
-                        .setSmallIcon(R.drawable.notification_icon).build();
-            }
 
-            notify.flags |= Notification.FLAG_AUTO_CANCEL;
-            notif.notify(0, notify);
+
+            SharedPreferences mPrefs = getSharedPreferences("label", 0);
+            int notificationId = mPrefs.getInt("notificationId", 0);
+            int SUMMARY_ID = 0;
+            String GROUP_KEY_WORK_EMAIL = "com.theironfoundry8890.stjohns";
+
+            Notification newMessageNotification1;
+             newMessageNotification1 =
+                    new NotificationCompat.Builder(getApplicationContext())
+                            .setSmallIcon(R.drawable.notification_icon)
+                            .setContentTitle(notificationTitle)
+                            .setContentText(notificationDescription)
+                            .setGroup(GROUP_KEY_WORK_EMAIL)
+                            .setSmallIcon(R.drawable.notification_icon)
+                            .setContentIntent(notifyPendingIntent)
+                            .build();
+
+
+
+            Notification summaryNotification =
+                    new NotificationCompat.Builder(getApplicationContext())
+                            .setContentTitle("True Summary")
+                            //set content text to support devices running API level < 24
+                            .setContentText("Two new messages")
+                            .setSmallIcon(R.drawable.notification_icon)
+                            //build summary info into InboxStyle template
+                            .setStyle(new NotificationCompat.InboxStyle()
+                                    .addLine(" ")
+                                    .addLine(" ")
+                                    .setBigContentTitle(" ")
+                                    .setSummaryText("Pending Notifications"))
+                            //specify which group this notification belongs to
+                            .setGroup(GROUP_KEY_WORK_EMAIL)
+                            //set this notification as the summary for the group
+                            .setGroupSummary(true)
+                            .setSmallIcon(R.drawable.notification_icon)
+                            .setPriority(Notification.PRIORITY_HIGH)
+                            .setSound(uri)
+                            .setVibrate(new long[] {1, 1, 1})
+                            .setContentIntent(notifyPendingIntent)
+                            .build();
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            notificationManager.notify(++notificationId, newMessageNotification1);
+            notificationManager.notify(SUMMARY_ID, summaryNotification);
+
+
+            SharedPreferences.Editor mEditor = mPrefs.edit();
+            mEditor.putInt("notificationId", notificationId).apply();
+
         }
     }
+
+
 }

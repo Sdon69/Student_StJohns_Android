@@ -6,12 +6,16 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +26,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -39,30 +44,17 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.Json;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingService;
-import com.google.firebase.messaging.RemoteMessage;
-import com.google.gson.Gson;
 import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 
-import org.apache.commons.io.IOUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,6 +66,12 @@ import java.util.TimerTask;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
+
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getAnnouncementSheetId;
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getEventSheetId;
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getMiscSheetId;
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getNoteSheetId;
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getUploadedVideoInfoSheetId;
 
 public class Newsfeed extends Activity
         implements EasyPermissions.PermissionCallbacks {
@@ -90,6 +88,9 @@ public class Newsfeed extends Activity
     private String globalDataArrayString;
     private int integerSemester;
 
+    private boolean isUpdateAvailable = false;
+    private String updateNotes = "";
+    private ListView  listViewGlobal;
 
     private boolean retrievingDataEnd = false;
 
@@ -146,6 +147,7 @@ public class Newsfeed extends Activity
 
     private String dept_filter = "All Departments";
     private String semester_filter = "All Semesters";
+    private String currentVersion ;
 
     private String dId;
 
@@ -221,11 +223,15 @@ public class Newsfeed extends Activity
 
             setContentView(activityLayout);
 
+            try {
+                PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
+                currentVersion = pInfo.versionName;
 
-            send_firebase_notification.sendGcmMessage("title1349","1350");
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
 
 
-            setSheetIds();
 
             colorCheck();
             // Initialize credentials and service object.
@@ -553,7 +559,7 @@ public class Newsfeed extends Activity
             if(mode.equals("timestampViewer"))
             {
                 spreadsheetId = getMiscSheetId();
-                range = "Timestamp!".concat("A"+ 2 + ":B");
+                range = "Timestamp!".concat("A"+ 2 + ":C");
             } else if(mode.equals("notesViewer")) {
                 spreadsheetId = getNoteSheetId();
             }else if(mode.equals("eventViewer"))
@@ -567,13 +573,12 @@ public class Newsfeed extends Activity
             }
 
 
-
             List<String> results = new ArrayList<String>();
             ValueRange response = this.mService.spreadsheets().values()
                     .get(spreadsheetId, range)
                     .execute();
             List<List<Object>> values = response.getValues();
-            Log.v("values", String.valueOf(values));
+
             if (values != null) {
 
 
@@ -609,13 +614,23 @@ public class Newsfeed extends Activity
                             isNotesTimestampUpdated =
                                     timestampCompare(timeStamp,newsfeedNotesTimestamp);
                             newsfeedNotesTimestampHolder = timeStamp;
-                        }if(modeRetrieved.equals("videoInfoViewer")){
+                        }else if(modeRetrieved.equals("videoInfoViewer")){
                         String timeStamp = String.valueOf(row.get(1));
                         isVideoInfoViewerTimestampUpdated =
                                 timestampCompare(timeStamp, videoInfoViewerTimestamp);
 
                         videoInfoViewerTimestampHolder = timeStamp;
-                    }
+                    }else if(modeRetrieved.equals("versionViewer")){
+
+                            String version = String.valueOf(row.get(1));
+
+                            if(Float.parseFloat(version)>Float.parseFloat(currentVersion))
+                            {
+                                isUpdateAvailable = true;
+                                updateNotes = String.valueOf(row.get(2));
+                            }
+
+                        }
 
 
                     }
@@ -652,7 +667,7 @@ public class Newsfeed extends Activity
                             if (cataegories.contains(semester_filter)) {
 
                                 title = String.valueOf(row.get(0));
-                                Log.v("annTitle",title);
+
                                 description = String.valueOf(row.get(1));
                                 String publisherId = String.valueOf(row.get(3));//Departments
                                 fullName = String.valueOf(row.get(4));
@@ -711,7 +726,7 @@ public class Newsfeed extends Activity
                         if(cataegories.contains(dept_filter)) {
                             if(cataegories.contains(semester_filter)) {
                                 title = String.valueOf(row.get(0));
-                                Log.v("notesTitle",title);
+
                                 description = String.valueOf(row.get(1));
                                 String publisherId = String.valueOf(row.get(3));//Departments
                                 fullName = String.valueOf(row.get(4));
@@ -954,10 +969,11 @@ public class Newsfeed extends Activity
                 }
 
                 if(retrievingDataEnd) {
+                    if(isUpdateAvailable)
+                        onUpdateAvailable();
                     if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                         postEventViewerMode();
                 }
-
                 }
         }
 
@@ -1053,6 +1069,8 @@ public class Newsfeed extends Activity
                     }
 
                     if(retrievingDataEnd) {
+                        if(isUpdateAvailable)
+                            onUpdateAvailable();
                         if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                             postEventViewerMode();
                     }
@@ -1253,7 +1271,7 @@ public class Newsfeed extends Activity
 
 
         String dayText = "default";
-        Log.v("local", String.valueOf(localDayIndex));
+
         if(localDayIndex == 1)
             dayText = "Monday";
         else if(localDayIndex == 2)
@@ -1554,7 +1572,9 @@ public class Newsfeed extends Activity
 
             listView.setAdapter(adapter);
 
+            listViewGlobal = listView;
 
+            listViewGlobal.setOnScrollListener(onScrollListener());
 
             if(end) {
 
@@ -1676,7 +1696,9 @@ public class Newsfeed extends Activity
 
             listView.setAdapter(adapter);
 
+            listViewGlobal = listView;
 
+            listViewGlobal.setOnScrollListener(onScrollListener());
 
             if(end) {
 
@@ -1789,12 +1811,7 @@ public class Newsfeed extends Activity
         }
     }
 
-    public void onClickListViewLayout(View v)
-    {
 
-       LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
-        timetableOverallLayout.setVisibility(View.GONE);
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onClickRightArrow(View v)
@@ -1811,12 +1828,12 @@ public class Newsfeed extends Activity
 
      if(timetableVisible)
      {
-         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timetableLinearLayout);
          timetableOverallLayout.setVisibility(View.GONE);
          timetableVisible = false;
      }else
      {
-         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+         LinearLayout timetableOverallLayout = (LinearLayout) findViewById(R.id.timetableLinearLayout);
          timetableOverallLayout.setVisibility(View.VISIBLE);
          timetableVisible = true;
      }
@@ -1859,14 +1876,15 @@ public class Newsfeed extends Activity
 
     public void onClickProfile(View v)
     {
-        Intent selectIntent = new Intent(Newsfeed.this,t_Teacher_Profile.class);
+
+        Intent selectIntent = new Intent(Newsfeed.this,Newsfeed.class);
         startActivity(selectIntent);
 
 
     }
-    public void onClickNewsfeed(View v)
+    public void onClickProfileButton(View v)
     {
-        Intent selectIntent = new Intent(Newsfeed.this,Newsfeed.class);
+        Intent selectIntent = new Intent(Newsfeed.this,dStudentProfile.class);
         startActivity(selectIntent);
 
 
@@ -1998,7 +2016,7 @@ public class Newsfeed extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
         SharedPreferences.Editor mEditor = mPrefs.edit();
-        Log.v("dataArray",dataArray);
+
         mEditor.putString("dataArray", dataArray).apply();
 
     }
@@ -2008,9 +2026,9 @@ public class Newsfeed extends Activity
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
 
-        Log.v("globalDataArrayString","before");
+
         globalDataArrayString = mPrefs.getString("dataArray", "unknown");
-        Log.v("globalDataArrayString",globalDataArrayString);
+
 
     }
     public boolean timestampCompare(String timestampRetrieved, String timestampStored){
@@ -2267,13 +2285,25 @@ public class Newsfeed extends Activity
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void generateNotification(String body) {
 
+        Intent notifyIntent = new Intent(this, Newsfeed.class);
 
 
+// Set the Activity to start in a new, empty task
+        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
+        PendingIntent notifyPendingIntent = PendingIntent.getActivity(
+                this, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        );
         NotificationManager notif=(NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         Notification notify=new Notification.Builder
-                (getApplicationContext()).setContentTitle("tiltle").setContentText(body).
-                setContentTitle("Next Period").setSmallIcon(R.drawable.notification_icon).build();
+                (getApplicationContext())
+                .setContentText(body)
+                .setContentTitle("Next Period")
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentIntent(notifyPendingIntent)
+//                .setDeleteIntent(getDeleteIntent())
+                .build();
 
         notify.flags |= Notification.FLAG_AUTO_CANCEL;
         notif.notify(0, notify);
@@ -2350,170 +2380,103 @@ public class Newsfeed extends Activity
         }
     };
 
-    public void setSheetIds()
+
+    public void onUpdateAvailable()
     {
-        String mode = "test";
+        Calendar c = Calendar.getInstance();
+        System.out.println("Current time => " + c.getTime());
+        SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+        String today = df.format(c.getTime());
 
         SharedPreferences mPrefs = getSharedPreferences("label", 0);
-        SharedPreferences.Editor mEditor = mPrefs.edit();
 
-        if(mode.equals("test")) {
-            mEditor.putString("eventSheetId", "1tFhDy9sR9dlJ0jwNbqbcq3TnFpViMHJOi2xeOv_Wqqw").apply();
-            mEditor.putString("notesSheetId", "1pAZtRVUuQFuGoUiWjiZRwXbrfju3ZcJgR0Lq6mBmmW0").apply();
-            mEditor.putString("announcementSheetId", "1P0iFk6F9AHddLOM4N_8NbMVVByz671rbzDikJIbcsS0").apply();
-            mEditor.putString("miscSheetId", "10PpNnvF4j5GNlbGrP4vPoPV8pQhix_9JP5kK9zlQDmY").apply();
-            mEditor.putString("uploadedVideoInfoSheetId", "17o0GpXwWZskawufsMj-iH8wdbFx_2HZ6Jfjtc1JjjfU").apply();
-        }else if(mode.equals("release"))
-        {
-            mEditor.putString("eventSheetId", "1SC0UPYthsoS5NKDuC5oJt-y29__f0gm0wkIkJoDduWw").apply();
-            mEditor.putString("notesSheetId", "1UDDtel5vAFBqVnaPZIZl20SwZEz_7fxGXYQOuKLvSmQ").apply();
-            mEditor.putString("announcementSheetId", "116OBhXliG69OB5bKRAEwpmlOz21LCCWStniSuIR6wPI").apply();
-            mEditor.putString("miscSheetId", "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU  ").apply();
-            mEditor.putString("uploadedVideoInfoSheetId", "12C3ceqz_Fr7GmXpLxt-n4iMhbr86yluGqT4fno_CW-8").apply();
+        String savedDate = mPrefs.getString("checkUploadDate", "default_value_if_variable_not_found");
+
+        if(!savedDate.equals(today)) {
+            SharedPreferences.Editor mEditor = mPrefs.edit();
+            mEditor.putString("checkUploadDate", today).apply();
+
+            LinearLayout updateAvailableLayout = (LinearLayout) findViewById(R.id.updateAvailableLayout);
+            TextView updateNotesTextView = (TextView) findViewById(R.id.updateNotes);
+            updateAvailableLayout.setVisibility(View.VISIBLE);
+            updateNotesTextView.setText(updateNotes);
+
         }
-
-
-
     }
 
-    public String  getEventSheetId()
+    public void onClickDownloadUpdate(View v) {
+        LinearLayout updateAvailableLayout = (LinearLayout) findViewById(R.id.updateAvailableLayout);
+
+        updateAvailableLayout.setVisibility(View.GONE);
+        Uri webpage = Uri.parse("https://play.google.com/store/apps/details?id=com.theironfoundry8890.stjohns");
+        Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
+        startActivity(webIntent);
+    }
+
+    public  void onClickLater(View v)
     {
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        LinearLayout updateAvailableLayout = (LinearLayout) findViewById(R.id.updateAvailableLayout);
 
-        return mPrefs.getString("eventSheetId", "default_value_if_variable_not_found");
+        updateAvailableLayout.setVisibility(View.GONE);
     }
 
-    public String  getAnnouncementSheetId()
+
+    public AbsListView.OnScrollListener onScrollListener() {
+        return new AbsListView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
+                                 int totalItemCount) {
+                if (firstVisibleItem == 0) {
+                    // check if we reached the top or bottom of the list
+                    View v = listViewGlobal.getChildAt(0);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the top: visible header and footer
+                        showOnScroll();
+                        Log.i("scrollLocation", "top reached");
+
+                    }
+                } else if (totalItemCount - visibleItemCount == firstVisibleItem) {
+                    View v = listViewGlobal.getChildAt(totalItemCount - 1);
+                    int offset = (v == null) ? 0 : v.getTop();
+                    if (offset == 0) {
+                        // reached the bottom: visible header and footer
+                        Log.i("scrollLocation", "bottom reached!");
+
+                    }
+                } else if (totalItemCount - visibleItemCount > firstVisibleItem){
+                    // on scrolling
+                    hideOnScroll();
+                    Log.i("scrollLocation", "on scroll");
+                }
+            }
+        };
+    }
+    private void hideOnScroll()
     {
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
-
-        return mPrefs.getString("announcementSheetId", "default_value_if_variable_not_found");
+        LinearLayout timeTableOverallLayout = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+        timeTableOverallLayout.setVisibility(View.GONE);
     }
 
-    public String  getNoteSheetId()
+    private void showOnScroll()
     {
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
-
-        return mPrefs.getString("notesSheetId", "default_value_if_variable_not_found");
+        LinearLayout filterBar = (LinearLayout) findViewById(R.id.timeTableOverallLayout);
+        filterBar.setVisibility(View.VISIBLE);
 
     }
 
-    public String  getMiscSheetId()
+    protected PendingIntent getDeleteIntent()
     {
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
-
-        return mPrefs.getString("miscSheetId", "default_value_if_variable_not_found");
-
-    }
-
-    public String getUploadedVideoInfoSheetId()
-    {
-        SharedPreferences mPrefs = getSharedPreferences("label", 0);
-
-        return mPrefs.getString("uploadedVideoInfoSheetId", "default_value_if_variable_not_found");
+        Intent intent = new Intent(this, MyNotification.class);
+        intent.setAction("notification_cancelled");
+        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
 
-//public void sendGcmMessage(String messageTitle,String messageBody)
-//{
-//    messageTitle =   messageTitle.replace("<comma3384>",".");
-//    messageBody =   messageBody.replace("<comma3384>",".");
-//        String envelope = messageTitle + "<comma3384>"  + messageBody;
-//
-//        new RetrieveFeedTask().execute(envelope);
-//
-//
-//
-//}
-//
-//
-//    class RetrieveFeedTask extends AsyncTask<String, Void, String> {
-//
-//        private Exception exception;
-//
-//
-//        protected String doInBackground(String[] args) {
-//
-//            if (args.length < 1 || args.length > 2 || args[0] == null) {
-//                System.err.println("usage: ./gradlew run -Pmsg=\"MESSAGE\" [-Pto=\"DEVICE_TOKEN\"]");
-//                System.err.println("");
-//                System.err.println("Specify a test message to broadcast via GCM. If a device's GCM registration token is\n" +
-//                        "specified, the message will only be sent to that device. Otherwise, the message \n" +
-//                        "will be sent to all devices subscribed to the \"global\" topic.");
-//                System.err.println("");
-//                System.err.println("Example (Broadcast):\n" +
-//                        "On Windows:   .\\gradlew.bat run -Pmsg=\"<Your_Message>\"\n" +
-//                        "On Linux/Mac: ./gradlew run -Pmsg=\"<Your_Message>\"");
-//                System.err.println("");
-//                System.err.println("Example (Unicast):\n" +
-//                        "On Windows:   .\\gradlew.bat run -Pmsg=\"<Your_Message>\" -Pto=\"<Your_Token>\"\n" +
-//                        "On Linux/Mac: ./gradlew run -Pmsg=\"<Your_Message>\" -Pto=\"<Your_Token>\"");
-//                System.exit(1);
-//            }
-//            try {
-//                // Prepare JSON containing the GCM message content. What to send and where to send.
-//                JSONObject jGcmData = new JSONObject();
-//                JSONObject jData = new JSONObject();
-//                try {
-//                    jData.put("message", args[0].trim());
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                // Where to send GCM message.
-//                if (args.length > 1 && args[1] != null) {
-//                    try {
-//                        jGcmData.put("to", args[1].trim());
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                } else {
-//                    try {
-//                        jGcmData.put("to", "/topics/Management1");
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                // What to send in GCM message.
-//                try {
-//                    jGcmData.put("data", jData);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                // Create connection to send GCM Message request.
-//                URL url = new URL("https://fcm.googleapis.com/fcm/send");
-//                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//                conn.setRequestProperty("Authorization", "key=" + "AIzaSyDhyP7p8FDixgOyGy0KdbHMXRRFCvaXpWc");
-//                conn.setRequestProperty("Content-Type", "application/json");
-//                conn.setRequestMethod("POST");
-//                conn.setDoOutput(true);
-//
-//                // Send GCM message content.
-//                OutputStream outputStream = conn.getOutputStream();
-//                Log.v("OutputStream", String.valueOf(conn));
-//                String jgcm = jGcmData.toString();
-//                 jgcm = jGcmData.toString().replace("\\","");
-//                Log.v("jGcmData",jgcm);
-//                outputStream.write(jgcm.getBytes());
-//
-//                // Read GCM response.
-//                InputStream inputStream = conn.getInputStream();
-//                String resp = IOUtils.toString(inputStream);
-//                System.out.println(resp);
-//                System.out.println("Check your device/emulator for notification or logcat for " +
-//                        "confirmation of the receipt of the GCM message.");
-//            } catch (IOException e) {
-//                System.out.println("Unable to send GCM message.");
-//                System.out.println("Please ensure that API_KEY has been replaced by the server " +
-//                        "API key, and that the device's registration token is correct (if specified).");
-//                e.printStackTrace();
-//            }
-//            return args[0];
-//        }
-//        protected void onPostExecute(String feed) {
-//
-//            Log.v("postfeed",feed);
-//
-//        }
-//    }
+
 }

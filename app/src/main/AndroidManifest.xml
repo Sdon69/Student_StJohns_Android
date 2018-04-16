@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <!-- <service -->
     <!-- android:name=".MyFirebaseInstanceIDService"> -->
     <!-- <intent-filter> -->
@@ -63,7 +64,14 @@
             android:name=".youtubeDataUploader.PlayActivity"
             android:label="@string/title_activity_play"
             android:parentActivityName=".t_notes_Viewer" />
-
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/notification_icon" />
+        <receiver android:name=".MyNotification" android:enabled="true" >
+            <intent-filter>
+                <action android:name="notification_cancelled"/>
+            </intent-filter>
+        </receiver>
         <service
             android:name=".MyFirebaseMessagingService">
             <intent-filter>
