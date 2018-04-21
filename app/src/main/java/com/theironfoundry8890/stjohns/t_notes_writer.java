@@ -798,7 +798,7 @@ public class t_notes_writer extends Activity
         }
 
         if(otherSubjects){
-            subCataegories = subCataegories.concat("Other Subjects");
+            subCataegories = subCataegories.concat("Other");
         }
 
         if(semesterOne){

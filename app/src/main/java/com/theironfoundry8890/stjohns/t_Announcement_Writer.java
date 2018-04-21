@@ -808,7 +808,7 @@ public class t_Announcement_Writer extends Activity
         }
 
         if(otherSubjects){
-            subCataegories = subCataegories.concat("Other Subjects");
+            subCataegories = subCataegories.concat("Other");
         }
 
         if(semesterOne){

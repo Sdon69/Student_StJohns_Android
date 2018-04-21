@@ -724,7 +724,7 @@ public class feedbackWriter extends Activity
 //        }
 //
 //        if(otherSubjects){
-//            subCataegories = subCataegories.concat("Other Subjects");
+//            subCataegories = subCataegories.concat("Other");
 //        }
 //
 //        if(semesterOne){

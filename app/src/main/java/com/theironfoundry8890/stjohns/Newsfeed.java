@@ -154,6 +154,7 @@ public class Newsfeed extends Activity
     private List dRow;
 
     private int dayIndex;
+    private int periodDayIndex;
 
     private boolean end = true;
 
@@ -266,12 +267,13 @@ public class Newsfeed extends Activity
 
 
                 dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-
+                periodDayIndex = dayIndex;
                 timetableDataConversion(dayIndex);
-                generatePeriodNotification(dayIndex);
 
-                timer.schedule(doAsynchronousTask, 0    , 6000);
-
+                if(periodDayIndex !=0) {
+                    generatePeriodNotification(periodDayIndex);
+                    timer.schedule(doAsynchronousTask, 0, 6000);
+                }
 
                 getResultsFromApi();
 
@@ -279,19 +281,6 @@ public class Newsfeed extends Activity
         }
 
     }
-//    public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService
-//    {
-//        private final String TAG="your_tag";
-//        @Override
-//        public void onTokenRefresh() {
-//
-//
-//            // Get updated InstanceID token.
-//            String refreshedToken = FirebaseInstanceId.getInstance().getToken();
-//            FirebaseMessaging.getInstance().subscribeToTopic("com.theironfoundry8890.stjohns");
-//        }
-//    }
-
 
     /**
      * Attempt to call the API, after verifying that all the preconditions are
@@ -1318,17 +1307,19 @@ public class Newsfeed extends Activity
     public void generatePeriodNotification(int localDayIndex)
     {
 
-        if(dayIndex==7)
+        if(localDayIndex==7)
         {
-            dayIndex = 1;
+
             localDayIndex = 1;
         }
 
-        if(dayIndex==0)
+        if(localDayIndex==0)
         {
-            dayIndex = 1;
+
             localDayIndex = 1;
         }
+
+
         String timetable = "<semester6643>1" +
                 "<type6280>" +
                 "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
@@ -1429,8 +1420,6 @@ public class Newsfeed extends Activity
         String constructionBody = "lets see...";
         if(!returnedString.equals("break")) {
             if(Integer.parseInt(returnedString)<=90) {
-
-
                 constructionBody = subjectSlots[subjectIndex] + " starts in " + returnedString + " minutes";
                 generateNotification(constructionBody);
             }
@@ -2369,8 +2358,9 @@ public class Newsfeed extends Activity
                         Date now = new Date();
                         Calendar calendar = Calendar.getInstance();
                         calendar.setTime(now);
-                        dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-                        generatePeriodNotification(3);
+                        periodDayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+                        if(periodDayIndex !=0)
+                        generatePeriodNotification(periodDayIndex);
                     }
                     catch (Exception e) {
                         // TODO Auto-generated catch block
