@@ -81,7 +81,7 @@
             android:layout_weight="0.25"
             android:orientation="vertical"
             android:paddingTop="10dp"
-            android:onClick="onClickTimetable"
+            android:onClick="onClickPercent"
             >
 
 
@@ -89,7 +89,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="4dp"
-                android:src="@drawable/timetable_logo" />
+                android:src="@drawable/percent" />
 
 
         </LinearLayout>

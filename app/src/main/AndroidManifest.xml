@@ -60,6 +60,7 @@
         <activity android:name=".s_Attendance_Activity" />
         <activity android:name=".s_EditProfileActivity" />
         <activity android:name=".t_Detailed_Announcement" />
+        <activity android:name=".resultsActivity"/>
         <activity
             android:name=".youtubeDataUploader.PlayActivity"
             android:label="@string/title_activity_play"

@@ -1080,6 +1080,13 @@ public class Newsfeed extends Activity
 
     }
 
+    public void onClickPercent(View v) {
+
+        Intent selectIntent = new Intent(Newsfeed.this,resultsActivity.class);
+        startActivity(selectIntent);
+
+    }
+
 
 
 
