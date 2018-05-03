@@ -22,18 +22,12 @@ import android.widget.Toast;
 
 public class resultsActivity extends AppCompatActivity {
 
-    private String expTitle;
-    private String expDesc;
-    private String expPublishDate;
-    private String expEventDate;
-    private String expFullName;
-    private String expRealPublishDate;
-    private String expFileAttachment;
+
 
     private String generatedSrc;
 
     private int a = 4;
-    private float x1, x2;
+
     static final int MIN_DISTANCE = 150;
 
 
@@ -72,7 +66,9 @@ public class resultsActivity extends AppCompatActivity {
                 myWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             }
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            if (imm != null) {
+                imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            }
             myWebView.loadUrl(generatedSrc);
         }else
         {
@@ -82,38 +78,8 @@ public class resultsActivity extends AppCompatActivity {
     }
 
 
-    public void onClickFullScreen(View v) {
-
-        Uri webpage = Uri.parse(generatedSrc);
-        Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
-        startActivity(webIntent);
-    }
-
-    public void onClickDownload(View v) {
-
-        String trimmedFileId = expFileAttachment.substring(expFileAttachment.lastIndexOf("/d/") + 3, expFileAttachment.lastIndexOf("vi") - 1);
-        String sourceString = "https://drive.google.com/uc?export=download&id=fileid";
-        String generatedSrc = sourceString.replace("fileid", trimmedFileId);
-        Uri webpage = Uri.parse(generatedSrc);
-        Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
-        startActivity(webIntent);
-    }
-
-    public void IntializeData() {
-        //Calling ids from layout
-        TextView titleTextView = (TextView) findViewById(R.id.detailedlaytitle);
-        TextView descTextView = (TextView) findViewById(R.id.detailedlaydesc);
-        TextView fullNameTextView = (TextView) findViewById(R.id.publisher);
-        TextView dateTextView = (TextView) findViewById(R.id.date);
-
-        //Setting values to layouts
-        titleTextView.setText(expTitle);
-        descTextView.setText(expDesc);
-        fullNameTextView.setText(expFullName);
-        dateTextView.setText(expRealPublishDate);
 
 
-    }
 
     public void onClickAttendance(View v) {
         Intent selectIntent = new Intent(resultsActivity.this, feedbackWriter.class);

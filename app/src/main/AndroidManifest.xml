@@ -29,7 +29,7 @@
         </activity>
         <activity android:name=".jfw" />
         <activity android:name=".intro" />
-        <activity android:name=".details" />
+        <activity android:name=".studentSignupActivity" />
         <activity android:name=".signin" />
         <activity android:name=".playground_notifications" />
         <activity android:name=".feedbackWriter" />
@@ -62,9 +62,9 @@
         <activity android:name=".t_Detailed_Announcement" />
         <activity android:name=".resultsActivity"/>
         <activity
-            android:name=".youtubeDataUploader.PlayActivity"
+            android:name="com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity"
             android:label="@string/title_activity_play"
-            android:parentActivityName=".t_notes_Viewer" />
+            android:parentActivityName="com.theironfoundry8890.stjohns.Newsfeed" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/notification_icon" />

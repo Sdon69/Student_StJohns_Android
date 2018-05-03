@@ -6,7 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="65dp"
         android:layout_alignParentBottom="true"
-        android:background="@drawable/whitebg"
+        android:background="@drawable/menu_border"
         android:orientation="horizontal"
     android:paddingBottom="8dp"
     android:paddingLeft="4dp"
@@ -32,22 +32,14 @@
                 >
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
+android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp"
                     android:id="@+id/attendance"
-                    android:src="@drawable/attendance" />
+                    android:src="@drawable/attendance"
+                    />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="0.5"
-                    android:paddingLeft="1dp"
-                    android:paddingRight="1dp"
-                    android:text="Feedback"
-                    android:textAlignment="center"
-                    android:textStyle="bold" />
+                
 
             </LinearLayout>
 
@@ -66,21 +58,13 @@
                 >
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
+android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+              android:padding="10dp"
                     android:id="@+id/announcement"
                     android:src="@drawable/announcements" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="0.5"
 
-                    android:text="Announcements"
-                    android:textAlignment="center"
-                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -98,53 +82,39 @@
                 >
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
+android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
+              android:padding="10dp"
                     android:id="@+id/notes"
                     android:src="@drawable/notes" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="0.5"
-                    android:text="Notes"
-                    android:textAlignment="center"
-                    android:textStyle="bold" />
+
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_alignParentBottom="true"
-                android:layout_weight="1"
-                android:background="?android:attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:onClick="onClickEvents"
-                android:orientation="vertical"
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_weight="1"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="onClickEvents"
+        android:orientation="vertical"
 
-                >
+        >
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:id="@+id/events"
-                    android:src="@drawable/events" />
+        <ImageView
+            android:id="@+id/events"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+      android:padding="10dp"
+            android:src="@drawable/events" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="0.5"
-                    android:text="Events"
-                    android:textAlignment="center"
-                    android:textStyle="bold" />
 
-            </LinearLayout>
+    </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -161,19 +131,12 @@
 
                 <ImageView
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
+                    android:layout_height="match_parent"
                     android:id="@+id/profile"
-                    android:src="@drawable/newsfeed" />
+                    android:src="@drawable/newsfeed"
+              android:padding="10dp"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:layout_weight="0.5"
-                    android:text="Feed"
-                    android:textAlignment="center"
-                    android:textStyle="bold" />
+            
 
             </LinearLayout>
 

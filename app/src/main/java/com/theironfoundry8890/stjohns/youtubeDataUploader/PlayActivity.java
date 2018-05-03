@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
@@ -82,7 +83,7 @@ public class PlayActivity extends Activity implements
         finish();
     }
 
-    public void panToVideo(final String youtubeId) {
+    public void panToVideo() {
         popPlayerFromBackStack();
         YouTubePlayerFragment playerFragment = YouTubePlayerFragment
                 .newInstance();
@@ -189,7 +190,12 @@ public class PlayActivity extends Activity implements
 
     @Override
     public void onFullscreen(boolean fullScreen) {
+        Log.v("onfullscreen", String.valueOf(mIsFullScreen));
         mIsFullScreen = fullScreen;
+        if(!mIsFullScreen)
+        {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
     }
 
     @Override
@@ -204,8 +210,7 @@ public class PlayActivity extends Activity implements
             setTitle(R.string.playing_uploaded_video);
         }
         loadData();
-
-        panToVideo(expFileAttachment);
+        panToVideo();
 
     }
 
@@ -229,8 +234,17 @@ public class PlayActivity extends Activity implements
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        NavUtils.navigateUpFromSameTask(this);
+        Log.v("fullscreen", String.valueOf(mIsFullScreen));
+        if(!mIsFullScreen){
+            super.onBackPressed();
+            NavUtils.navigateUpFromSameTask(this);
+        }else
+        {
+            mYouTubePlayer.setFullscreen(false);
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        }
+
     }
 
     public interface Callbacks {

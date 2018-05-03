@@ -9,7 +9,7 @@
     android:layout_marginTop="28dp"
     android:layout_marginLeft="16dp"
     android:layout_marginRight="16dp"
-    android:background="@drawable/border">
+    android:background="@drawable/curved_list_view_tile">
     <TextView
         android:id="@+id/date_published"
         android:layout_width="wrap_content"

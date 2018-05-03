@@ -264,7 +264,7 @@ public class t_Teacher_Profile extends Activity
         semester = Semester;
 
 
-        Log.v("details",firstName.concat(lastName + phoneNo + sId + email + pass + semester));
+        Log.v("studentSignupActivity",firstName.concat(lastName + phoneNo + sId + email + pass + semester));
 
 
         IntializeData();

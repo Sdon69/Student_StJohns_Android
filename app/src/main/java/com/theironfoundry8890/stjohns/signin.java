@@ -738,7 +738,7 @@ public class signin extends Activity
 
     public void onClickSignup (View v) {
 
-        Intent selectIntent = new Intent(signin.this,details.class);
+        Intent selectIntent = new Intent(signin.this,studentSignupActivity.class);
         startActivity(selectIntent);
 
 

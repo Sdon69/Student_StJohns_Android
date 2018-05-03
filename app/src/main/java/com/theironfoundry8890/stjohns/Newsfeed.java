@@ -22,13 +22,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -61,6 +65,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -71,6 +76,7 @@ import static com.theironfoundry8890.stjohns.sheetsIdCollection.getAnnouncementS
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getEventSheetId;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getMiscSheetId;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getNoteSheetId;
+import static com.theironfoundry8890.stjohns.sheetsIdCollection.getTimetableTimestampSheetId;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getUploadedVideoInfoSheetId;
 
 public class Newsfeed extends Activity
@@ -79,7 +85,7 @@ public class Newsfeed extends Activity
     private Button mCallApiButton;
     ProgressDialog mProgress;
 
-
+    private String searchQuery = "";
     private String sSemester;
     private String sDepartment;
     private String globalTransferArray[];
@@ -97,6 +103,8 @@ public class Newsfeed extends Activity
     private String newsfeedNotesTimestamp;
     private String newsfeedAnnouncementTimestamp;
     private String newsfeedEventTimestamp;
+    private String timetableTimestamp;
+
 
     private boolean isVideoInfoViewerTimestampUpdated = false;
     private String videoInfoViewerTimestamp;
@@ -137,7 +145,7 @@ public class Newsfeed extends Activity
     private String lastDateofRegistration;
     private String fees;
     final ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
-
+    final ArrayList<newsfeedPublic> arraylist = new ArrayList<newsfeedPublic>();
     final ArrayList<newsfeedPublic> containers = new ArrayList<newsfeedPublic>();
     final ArrayList<newsfeedPublic> newsfeedAnnouncements = new ArrayList<newsfeedPublic>();
     final ArrayList<newsfeedPublic> newsfeedEvents = new ArrayList<newsfeedPublic>();
@@ -173,6 +181,14 @@ public class Newsfeed extends Activity
     private static final String BUTTON_TEXT = "Call Google Sheets API";
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { SheetsScopes.SPREADSHEETS };
+    private boolean isAnyTimetableUpdated;
+    private String sClassName;
+    private String sSection;
+    private String timetableTimestampHolder;
+    private boolean isUserTimetableUpdated;
+    private String timetableString;
+    private boolean isGuestLogin;
+    private newsfeedAdapter adapter;
 
     /**
      * Create the main activity.
@@ -188,7 +204,7 @@ public class Newsfeed extends Activity
         if(appFirstUse)
         {
 
-            Intent selectIntent = new Intent(Newsfeed.this,details.class);
+            Intent selectIntent = new Intent(Newsfeed.this,studentSignupActivity.class);
             startActivity(selectIntent);
         }else {
 
@@ -202,6 +218,7 @@ public class Newsfeed extends Activity
                     LinearLayout.LayoutParams.MATCH_PARENT);
             activityLayout.setLayoutParams(lp);
             activityLayout.setOrientation(LinearLayout.VERTICAL);
+
 
 
             ViewGroup.LayoutParams tlp = new ViewGroup.LayoutParams(
@@ -243,20 +260,26 @@ public class Newsfeed extends Activity
             loadDataArray();
 
             if(globalDepartment.equals("unknown")) {
-                RelativeLayout whatDepartment = (RelativeLayout) findViewById(R.id.whatDepartment);
-                whatDepartment.setVisibility(View.VISIBLE);
+                if(isGuestLogin)
+                {
+                    RelativeLayout guestLoginLayout = (RelativeLayout) findViewById(R.id.guestLogin);
+                    guestLoginLayout.setVisibility(View.VISIBLE);
+                }
+                else {
+                    RelativeLayout whatDepartment = (RelativeLayout) findViewById(R.id.whatDepartment);
+                    whatDepartment.setVisibility(View.VISIBLE);
+                }
             }else
 
             {
 
                 loadDataArray();
-                if(!globalDataArrayString.equals("unknown"))
-                {
-
-                    sortDataByDate(globalDataArrayString);
-                    EventList();
+                if(globalDataArrayString != null) {
+                    if (!globalDataArrayString.equals("unknown")) {
+                        sortDataByDate(globalDataArrayString);
+                        EventList();
+                    }
                 }
-
                 dept_filter = sDepartment;
 
                 semester_filter = sSemester;
@@ -268,10 +291,20 @@ public class Newsfeed extends Activity
 
                 dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
                 periodDayIndex = dayIndex;
+                try {
                 timetableDataConversion(dayIndex);
+            }catch (Exception e)
+            {
+                e.printStackTrace();
+            }
 
                 if(periodDayIndex !=0) {
-                    generatePeriodNotification(periodDayIndex);
+                    try {
+                        generatePeriodNotification(periodDayIndex);
+                    }catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
                     timer.schedule(doAsynchronousTask, 0, 6000);
                 }
 
@@ -548,7 +581,7 @@ public class Newsfeed extends Activity
             if(mode.equals("timestampViewer"))
             {
                 spreadsheetId = getMiscSheetId();
-                range = "Timestamp!".concat("A"+ 2 + ":C");
+                range = "Timestamp!".concat("A"+ 2 + ":D");
             } else if(mode.equals("notesViewer")) {
                 spreadsheetId = getNoteSheetId();
             }else if(mode.equals("eventViewer"))
@@ -560,14 +593,25 @@ public class Newsfeed extends Activity
                 spreadsheetId = getUploadedVideoInfoSheetId();
                 range = "videoInfo!".concat("A"+ 2 + ":I");
             }
+            else if(mode.equals("timetableTimestampViewer"))
+            {
+                Log.v("rangeSetter",mode);
+                spreadsheetId = getTimetableTimestampSheetId();
+                range = "timetableTimestampViewer!".concat("A"+ 2 + ":C");
+            }
+            else if(mode.equals("miscTimetableViewer"))
+            {
+                spreadsheetId = getMiscSheetId();
+                range = "Sections!".concat("A"+ 2 + ":E");
+            }
 
-
+            Log.v("checking","check583");
             List<String> results = new ArrayList<String>();
             ValueRange response = this.mService.spreadsheets().values()
                     .get(spreadsheetId, range)
                     .execute();
             List<List<Object>> values = response.getValues();
-
+            Log.v("checking", String.valueOf(values));
             if (values != null) {
 
 
@@ -575,13 +619,16 @@ public class Newsfeed extends Activity
 
 
                 for (List row : values) {
+                    Log.v("checkFOr",mode);
+                    Log.v("row values", String.valueOf(values));
 
 
 
                     if(mode.equals("timestampViewer"))
                     {
-                        String modeRetrieved = String.valueOf(row.get(0));
 
+                        String modeRetrieved = String.valueOf(row.get(0));
+                        Log.v("timestampViewer",modeRetrieved);
                         if(modeRetrieved.equals("announcementViewer"))
                         {
                             String timeStamp = String.valueOf(row.get(1));
@@ -619,11 +666,72 @@ public class Newsfeed extends Activity
                                 updateNotes = String.valueOf(row.get(2));
                             }
 
+                        }else if(modeRetrieved.equals("timetableViewer"))
+                        {
+                            Log.v("enter","timetableViewer");
+
+                            String classOfLatestTimestamp = String.valueOf(row.get(1));
+                            Log.v("afterClass",classOfLatestTimestamp);
+                            String latestTimestamp = String.valueOf(row.get(2));
+                            Log.v("afterLatestTimestamp",latestTimestamp);
+                            String previousTimestamp = String.valueOf(row.get(3));
+                            Log.v("afterpreviousTimestamp",previousTimestamp);
+                            Log.v("savedClass",classOfLatestTimestamp);
+                            String savedClass = sClassName + sSection;
+                            Log.v("savedClass",timetableTimestamp + " : " + latestTimestamp );
+
+                            if(classOfLatestTimestamp.equals(savedClass)) {
+                                if (Integer.parseInt(timetableTimestamp) < Integer.parseInt(latestTimestamp)) {
+                                    Log.v("overHolderInt",timetableTimestamp + " : " + latestTimestamp);
+                                    timetableTimestampHolder = timetableTimestamp;
+                                    timetableTimestamp = classOfLatestTimestamp;
+                                     isAnyTimetableUpdated = true;
+                                }
+                            }else
+                            {
+                                if (Integer.parseInt(timetableTimestamp) < Integer.parseInt(previousTimestamp)) {
+                                    timetableTimestampHolder = timetableTimestamp;
+                                    timetableTimestamp = classOfLatestTimestamp;
+                                     isAnyTimetableUpdated = true;
+                                }
+                            }
                         }
 
 
                     }
 
+                    if(mode.equals("timetableTimestampViewer"))
+                    {
+                        Log.v("checkFOr","timetableTimestampViewer");
+                        String sectionName = String.valueOf(row.get(0));
+                        String className = String.valueOf(row.get(1));
+                        String savedClassSection = sClassName + sSection;
+                        String retrievedClassSection = className + sectionName;
+                        String retrievedTimestamp =  String.valueOf(row.get(2));
+                        Log.v("cs",retrievedClassSection+retrievedTimestamp + ":" + timetableTimestampHolder + "" + savedClassSection);
+                        if(retrievedClassSection.equals(savedClassSection))
+                        {
+                            if(Integer.parseInt(timetableTimestampHolder)<Integer.parseInt(retrievedTimestamp))
+                            {
+                                isUserTimetableUpdated = true;
+                            }
+                        }
+                    }
+
+                    if(mode.equals("miscTimetableViewer"))
+                    {
+                        String sectionName = String.valueOf(row.get(0));
+                        String className = String.valueOf(row.get(1));
+                        String savedClassSection = sClassName + sSection;
+                        String retrievedClassSection = className + sectionName;
+                        Log.v("afterMode","miscTimetableViewer");
+
+                        if(retrievedClassSection.equals(savedClassSection))
+                        {
+                            timetableString = String.valueOf(row.get(4));
+                            Log.v("timetableString", timetableString);
+                        }
+                    }
 
                     if(mode.equals("announcementViewer")) {
 
@@ -883,7 +991,14 @@ public class Newsfeed extends Activity
 
                 end = true;
 
-                if(mode.equals("timestampViewer")) {
+                if(mode.equals("miscTimetableViewer"))
+                {
+                    Log.v("timetableString",timetableString);
+                    saveTimetableString();
+
+
+                }
+                else if(mode.equals("timestampViewer")) {
 
                     if(isAnnouncementTimestampUpdated) {
                         mode = "announcementViewer";
@@ -929,7 +1044,7 @@ public class Newsfeed extends Activity
                     if (isVideoInfoViewerTimestampUpdated) {
                         mode = "videoInfoViewer";
                         getResultsFromApi();
-                      }
+                    }
                     else if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
@@ -940,7 +1055,7 @@ public class Newsfeed extends Activity
                         hideLoading();
                     }
                 } else if(mode.equals("videoInfoViewer")) {
-                 if(isEventTimestampUpdated)
+                    if(isEventTimestampUpdated)
                     {
                         mode = "eventViewer";
                         getResultsFromApi();
@@ -951,7 +1066,7 @@ public class Newsfeed extends Activity
                     }
                 }  else if(mode.equals("eventViewer"))
                 {
-                      retrievingDataEnd = true;
+                    retrievingDataEnd = true;
                     if(globalDataArrayString.equals("unknown"))
                         postEventViewerMode();
 
@@ -962,8 +1077,26 @@ public class Newsfeed extends Activity
                         onUpdateAvailable();
                     if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                         postEventViewerMode();
+
+                    if(isAnyTimetableUpdated)
+                    {
+                        Log.v("isAnyUpdated","isAnyUpdated");
+                        mode = "timetableTimestampViewer";
+                        isAnyTimetableUpdated = false;
+                        saveTimetableTimestamp();
+                        getResultsFromApi();
+                    }
+                    else if(isUserTimetableUpdated)
+                    {
+                        Log.v("isAnyUpdated","isAnyUpdated");
+                        mode = "miscTimetableViewer";
+                        isUserTimetableUpdated = false;
+                        getResultsFromApi();
+                    }else{
+                        hideLoading();
+                    }
                 }
-                }
+            }
         }
 
         @Override
@@ -983,7 +1116,13 @@ public class Newsfeed extends Activity
 
                     end = true;
 
-                    if(mode.equals("timestampViewer")) {
+                    if(mode.equals("miscTimetableViewer"))
+                    {
+                        Log.v("timetableString",timetableString);
+                        saveTimetableString();
+
+                    }
+                    else if(mode.equals("timestampViewer")) {
 
                         if(isAnnouncementTimestampUpdated) {
                             mode = "announcementViewer";
@@ -1052,6 +1191,7 @@ public class Newsfeed extends Activity
                     }  else if(mode.equals("eventViewer"))
                     {
                         retrievingDataEnd = true;
+
                         if(globalDataArrayString.equals("unknown"))
                             postEventViewerMode();
 
@@ -1062,8 +1202,25 @@ public class Newsfeed extends Activity
                             onUpdateAvailable();
                         if (isAnnouncementTimestampUpdated || isNotesTimestampUpdated || isEventTimestampUpdated)
                             postEventViewerMode();
-                    }
 
+                        if(isAnyTimetableUpdated)
+                        {
+                            Log.v("isAnyUpdated","isAnyUpdated");
+                            mode = "timetableTimestampViewer";
+                            isAnyTimetableUpdated = false;
+                            saveTimetableTimestamp();
+                            getResultsFromApi();
+                        }
+                        else if(isUserTimetableUpdated)
+                        {
+                            Log.v("isAnyUpdated","isAnyUpdated");
+                            mode = "miscTimetableViewer";
+                            isUserTimetableUpdated = false;
+                            getResultsFromApi();
+                        }else{
+                            hideLoading();
+                        }
+                    }
                 }
             } else {
                 mOutputText.setText("Request cancelled.");
@@ -1103,6 +1260,39 @@ public class Newsfeed extends Activity
         mEditor.putString("newsfeedAnnouncementTimestamp", newsfeedAnnouncementTimestamp).apply();
         mEditor.putString("newsfeedEventTimestamp", newsfeedEventTimestamp).apply();
         mEditor.putString("newsfeedVideoInfoViewerTimestamp", videoInfoViewerTimestamp).apply();
+
+    }
+    public void saveTimetableTimestamp()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("timetableTimestamp", timetableTimestamp).apply();
+    }
+    public void saveTimetableString()
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putString("timetableString", timetableString).apply();
+
+        Date now = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+
+
+        dayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+        periodDayIndex = dayIndex;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            timetableDataConversion(dayIndex);
+        }
+
+        if(periodDayIndex !=0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                generatePeriodNotification(periodDayIndex);
+            }
+//            timer.schedule(doAsynchronousTask, 0, 6000);
+        }
+
+
     }
 
 
@@ -1112,12 +1302,19 @@ public class Newsfeed extends Activity
 
         sDepartment =  mPrefs.getString("Department", "unknown");
         globalDepartment = sDepartment;
-        String semester = mPrefs.getString("Semester", "default_value_if_variable_not_found");
+        String semester = mPrefs.getString("Semester", "unknown");
+        if(!semester.equals("unknown"))
         integerSemester = Integer.parseInt(semester);
         newsfeedNotesTimestamp =  mPrefs.getString("newsfeedNotesTimestamp", "1521000000");
         newsfeedAnnouncementTimestamp = mPrefs.getString("newsfeedAnnouncementTimestamp", "1521000000");
         newsfeedEventTimestamp = mPrefs.getString("newsfeedEventTimestamp", "1521000000");
         videoInfoViewerTimestamp = mPrefs.getString("newsfeedVideoInfoViewerTimestamp", "1521000000");
+        timetableTimestamp = mPrefs.getString("timetableTimestamp", "1521000000");
+        timetableString = mPrefs.getString("timetableString", "unassigned");
+        sClassName = mPrefs.getString("Class","BBA");
+        sSection = mPrefs.getString("Section","A");
+        isGuestLogin = mPrefs.getBoolean("isGuestLogin",false);
+
 
         if (semester.equals("1")) {
             sSemester = "First Semester";
@@ -1174,17 +1371,14 @@ public class Newsfeed extends Activity
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-    public void timetableDataConversion(int localDayIndex)
-    {
-
-        if(dayIndex==7)
-        {
+    public void timetableDataConversion(int localDayIndex) {
+        if(!timetableString.equals("unassigned")) {
+        if (dayIndex == 7) {
             dayIndex = 1;
             localDayIndex = 1;
         }
 
-        if(dayIndex==0)
-        {
+        if (dayIndex == 0) {
             dayIndex = 1;
             localDayIndex = 1;
         }
@@ -1223,7 +1417,7 @@ public class Newsfeed extends Activity
                 "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
                 "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
                 "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
-                "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>"+
+                "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
                 "<semester6643>5" +
                 "<type6280>" +
                 "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
@@ -1241,18 +1435,17 @@ public class Newsfeed extends Activity
                 "F ECOM<subjects5432>Int Trade<subjects5432>SM & BP<subjects5432>MIS<subjects5432><days5548>" +
                 "Int Trade<subjects5432>VAT & ST<subjects5432>MIS<subjects5432>AUDITING<subjects5432><days5548>" +
                 "Int Trade<subjects5432>AUDITING<subjects5432>VAT & ST<subjects5432>F ECOM<subjects5432><days5548>" +
-                "AUDITING<subjects5432>Int Trade<subjects5432>VAT & ST<subjects5432>SM & BP<subjects5432>"  ;
+                "AUDITING<subjects5432>Int Trade<subjects5432>VAT & ST<subjects5432>SM & BP<subjects5432>";
 
         String semesterSplit[] = timetable.split("<semester6643>");
 
-        String dataSplit[] =  semesterSplit[integerSemester].split("<type6280>");  // 1 = A section 2 = B section and so on....
+        String dataSplit[] = semesterSplit[integerSemester].split("<type6280>");  // 1 = A section 2 = B section and so on....
 
         String timeSlots[] = dataSplit[1].split("<time2298>");
 
 
         TextView timeSlot0 = (TextView) findViewById(R.id.timeSlot0);
         timeSlot0.setText(timeSlots[0]);
-
 
 
         TextView timeSlot1 = (TextView) findViewById(R.id.timeSlot1);
@@ -1265,20 +1458,19 @@ public class Newsfeed extends Activity
         timeSlot3.setText(timeSlots[3]);
 
 
-
         String dayText = "default";
 
-        if(localDayIndex == 1)
+        if (localDayIndex == 1)
             dayText = "Monday";
-        else if(localDayIndex == 2)
+        else if (localDayIndex == 2)
             dayText = "Tuesday";
-        else if(localDayIndex == 3)
+        else if (localDayIndex == 3)
             dayText = "Wednesday";
-        else if(localDayIndex == 4)
+        else if (localDayIndex == 4)
             dayText = "Thursday";
-        else if(localDayIndex == 5)
+        else if (localDayIndex == 5)
             dayText = "Friday";
-        else if(localDayIndex == 6)
+        else if (localDayIndex == 6)
             dayText = "Saturday";
 
 
@@ -1286,7 +1478,7 @@ public class Newsfeed extends Activity
         dayOfTheWeek.setText(dayText);
 
 
-        String daySlots [] = dataSplit[2].split("<days5548>");
+        String daySlots[] = dataSplit[2].split("<days5548>");
         String subjectSlots[] = daySlots[localDayIndex - 1].split("<subjects5432>");
         TextView subjectSlot0 = (TextView) findViewById(R.id.subjectSlot0);
         subjectSlot0.setText(subjectSlots[0]);
@@ -1301,9 +1493,10 @@ public class Newsfeed extends Activity
         subjectSlot3.setText(subjectSlots[3]);
 
 
-
-
-
+    }else{
+            TextView dayOfTheWeek = (TextView) findViewById(R.id.dayOfTheWeek);
+            dayOfTheWeek.setText("Timetable Not Available");
+        }
 
 
 
@@ -1313,131 +1506,120 @@ public class Newsfeed extends Activity
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void generatePeriodNotification(int localDayIndex)
     {
+        if(!timetableString.equals("unassigned")) {
+            if (localDayIndex == 7) {
 
-        if(localDayIndex==7)
-        {
-
-            localDayIndex = 1;
-        }
-
-        if(localDayIndex==0)
-        {
-
-            localDayIndex = 1;
-        }
-
-
-        String timetable = "<semester6643>1" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
-                "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
-                "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
-                "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
-                "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
-                "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
-                "<semester6643>2" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
-                "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
-                "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
-                "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
-                "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
-                "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
-                "<semester6643>3" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
-                "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
-                "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
-                "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
-                "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
-                "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
-                "<semester6643>4" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
-                "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
-                "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
-                "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
-                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
-                "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>"+
-                "<semester6643>5" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
-                "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
-                "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
-                "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
-                "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
-                "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
-                "<semester6643>6" +
-                "<type6280>" +
-                "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
-                "MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432>AUDITING<subjects5432><days5548>" +
-                "VAT & ST<subjects5432>MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432><days5548>" +
-                "F ECOM<subjects5432>Int Trade<subjects5432>SM & BP<subjects5432>MIS<subjects5432><days5548>" +
-                "Int Trade<subjects5432>VAT & ST<subjects5432>MIS<subjects5432>AUDITING<subjects5432><days5548>" +
-                "Int Trade<subjects5432>AUDITING<subjects5432>VAT & ST<subjects5432>F ECOM<subjects5432><days5548>" +
-                "AUDITING<subjects5432>Int Trade<subjects5432>VAT & ST<subjects5432>SM & BP<subjects5432>"  ;
-
-        String semesterSplit[] = timetable.split("<semester6643>");
-
-        String dataSplit[] =  semesterSplit[integerSemester].split("<type6280>");  // 1 = A section 2 = B section and so on....
-
-        String timeSlots[] = dataSplit[1].split("<time2298>");
-
-
-
-        int t;
-        String returnedString = "0";
-        boolean initial = false;
-        boolean limit = false;
-        boolean limit0 = false;
-        int subjectIndex = 0;
-        for(t = 0;t<timeSlots.length;t++)
-        {
-            if(t == 0)
-                initial = true;
-
-
-
-
-            returnedString = calculateTimeLeft(timeSlots[t],initial,limit);
-            initial = false;
-
-
-
-            if(!returnedString.equals("break"))
-            {
-                subjectIndex = t;
-                break;
+                localDayIndex = 1;
             }
 
-        }
+            if (localDayIndex == 0) {
 
-
-
-
-
-        String daySlots [] = dataSplit[2].split("<days5548>");
-        String subjectSlots[] = daySlots[localDayIndex - 1].split("<subjects5432>");
-
-        String constructionBody = "lets see...";
-        if(!returnedString.equals("break")) {
-            if(Integer.parseInt(returnedString)<=90) {
-                constructionBody = subjectSlots[subjectIndex] + " starts in " + returnedString + " minutes";
-                generateNotification(constructionBody);
+                localDayIndex = 1;
             }
 
+
+            String timetable = "<semester6643>1" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
+                    "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
+                    "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
+                    "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
+                    "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
+                    "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
+                    "<semester6643>2" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
+                    "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
+                    "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
+                    "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
+                    "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
+                    "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
+                    "<semester6643>3" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "CA<subjects5432>BS<subjects5432>ME<subjects5432>BC-II<subjects5432><days5548>" +
+                    "MTP<subjects5432>CA<subjects5432>BS<subjects5432>ME<subjects5432><days5548>" +
+                    "LRF<subjects5432>ME<subjects5432>CA<subjects5432>BS<subjects5432><days5548>" +
+                    "BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432>CA<subjects5432><days5548>" +
+                    "BS<subjects5432>BC-II<subjects5432>LRF<subjects5432>MTP<subjects5432><days5548>" +
+                    "ME<subjects5432>BC-II<subjects5432>MTP<subjects5432>LRF<subjects5432>" +
+                    "<semester6643>4" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
+                    "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
+                    "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
+                    "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
+                    "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
+                    "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
+                    "<semester6643>5" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "RM<subjects5432>SM<subjects5432>FM<subjects5432>OR<subjects5432><days5548>" +
+                    "CB<subjects5432>OR<subjects5432>RM<subjects5432>SM<subjects5432><days5548>" +
+                    "FM<subjects5432>PM<subjects5432>SM<subjects5432>RM<subjects5432><days5548>" +
+                    "CB<subjects5432>OR<subjects5432>FM<subjects5432>PM<subjects5432><days5548>" +
+                    "SM<subjects5432>FM<subjects5432>PM<subjects5432>CB<subjects5432><days5548>" +
+                    "RM<subjects5432>OR<subjects5432>CB<subjects5432>PM<subjects5432>" +
+                    "<semester6643>6" +
+                    "<type6280>" +
+                    "  10:10 -  10:55<time2298>  10:55 -  11:40<time2298>  11:40 -  12:25<time2298>  12:25 -  13:10<type6280>" +
+                    "MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432>AUDITING<subjects5432><days5548>" +
+                    "VAT & ST<subjects5432>MIS<subjects5432>SM & BP<subjects5432>F ECOM<subjects5432><days5548>" +
+                    "F ECOM<subjects5432>Int Trade<subjects5432>SM & BP<subjects5432>MIS<subjects5432><days5548>" +
+                    "Int Trade<subjects5432>VAT & ST<subjects5432>MIS<subjects5432>AUDITING<subjects5432><days5548>" +
+                    "Int Trade<subjects5432>AUDITING<subjects5432>VAT & ST<subjects5432>F ECOM<subjects5432><days5548>" +
+                    "AUDITING<subjects5432>Int Trade<subjects5432>VAT & ST<subjects5432>SM & BP<subjects5432>";
+
+            String semesterSplit[] = timetable.split("<semester6643>");
+
+            String dataSplit[] = semesterSplit[integerSemester].split("<type6280>");  // 1 = A section 2 = B section and so on....
+
+            String timeSlots[] = dataSplit[1].split("<time2298>");
+
+
+            int t;
+            String returnedString = "0";
+            boolean initial = false;
+            boolean limit = false;
+            boolean limit0 = false;
+            int subjectIndex = 0;
+            for (t = 0; t < timeSlots.length; t++) {
+                if (t == 0)
+                    initial = true;
+
+
+                returnedString = calculateTimeLeft(timeSlots[t], initial, limit);
+                initial = false;
+
+
+                if (!returnedString.equals("break")) {
+                    subjectIndex = t;
+                    break;
+                }
+
+            }
+
+
+            String daySlots[] = dataSplit[2].split("<days5548>");
+            String subjectSlots[] = daySlots[localDayIndex - 1].split("<subjects5432>");
+
+            String constructionBody = "lets see...";
+            if (!returnedString.equals("break")) {
+                if (Integer.parseInt(returnedString) <= 90) {
+                    constructionBody = subjectSlots[subjectIndex] + " starts in " + returnedString + " minutes";
+                    generateNotification(constructionBody);
+                }
+
+            }
+
+
+        }else{
+            TextView dayOfTheWeek = (TextView) findViewById(R.id.dayOfTheWeek);
+            dayOfTheWeek.setText("Timetable Not Available");
         }
-
-
-
-
-
-
 
 
     }
@@ -1448,7 +1630,7 @@ public class Newsfeed extends Activity
 
 
 
-            newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+            adapter = new newsfeedAdapter(this, words);
 
 
             ListView listView = (ListView) findViewById(R.id.list);
@@ -1503,7 +1685,7 @@ public class Newsfeed extends Activity
 
 
 
-            newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+            adapter = new newsfeedAdapter(this, words);
 
 
             ListView listView = (ListView) findViewById(R.id.list);
@@ -1561,7 +1743,7 @@ public class Newsfeed extends Activity
         }else if(mode.equals("eventViewer")){
 
 
-            newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+            adapter = new newsfeedAdapter(this, words);
 
 
             ListView listView = (ListView) findViewById(R.id.list);
@@ -1684,8 +1866,7 @@ public class Newsfeed extends Activity
         {
 
 
-
-            newsfeedAdapter adapter = new newsfeedAdapter(this, words);
+            adapter = new newsfeedAdapter(this, words);
 
 
             ListView listView = (ListView) findViewById(R.id.list);
@@ -2006,6 +2187,7 @@ public class Newsfeed extends Activity
         FirebaseMessaging.getInstance().subscribeToTopic(globalDepartment+integerSemester);
         mEditor.putBoolean("firebaseSubscribed", true).apply();
 
+
     }
     public void saveDataArray(String dataArray){
 
@@ -2158,17 +2340,21 @@ public class Newsfeed extends Activity
             String element7 = splitProtectionDeactivated(elementArray[7]);
             String element8 = splitProtectionDeactivated(elementArray[8]);
 
+            Log.v("checkingElement1",element1);
+            Log.v("checkingElement2",element2);
 
 
             if (elementArray[0].equals("NOTES") || elementArray[0].equals("ANNOUNCEMENTS")) {
 
+                Log.v("elementcontains", String.valueOf(element1.contains(searchQuery)));
                 String element9 = splitProtectionDeactivated(elementArray[9]);
-
+                if(element1.contains(searchQuery) || element2.contains(searchQuery))
                 words.add(new newsfeedPublic(element1, element2, element3, element4,
                         element5, element6, element7
                         , element8, element0,element9));
             } else {
 
+                if(element1.contains(searchQuery) || element2.contains(searchQuery))
                 words.add(new newsfeedPublic(element1, element2, element3, element4,
                         element5, element6, element7
                         , element0,element8));
@@ -2366,8 +2552,13 @@ public class Newsfeed extends Activity
                         Calendar calendar = Calendar.getInstance();
                         calendar.setTime(now);
                         periodDayIndex = calendar.get(Calendar.DAY_OF_WEEK) - 1;
-                        if(periodDayIndex !=0)
-                        generatePeriodNotification(periodDayIndex);
+                        if(periodDayIndex !=0) {
+                            try {
+                                generatePeriodNotification(periodDayIndex);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     catch (Exception e) {
                         // TODO Auto-generated catch block
@@ -2405,7 +2596,7 @@ public class Newsfeed extends Activity
         LinearLayout updateAvailableLayout = (LinearLayout) findViewById(R.id.updateAvailableLayout);
 
         updateAvailableLayout.setVisibility(View.GONE);
-        Uri webpage = Uri.parse("https://play.google.com/store/apps/details?id=com.theironfoundry8890.stjohns");
+        Uri webpage = Uri.parse("https://play.google.com/store/apps/studentSignupActivity?id=com.theironfoundry8890.stjohns");
         Intent webIntent = new Intent(Intent.ACTION_VIEW, webpage);
         startActivity(webIntent);
     }
@@ -2474,6 +2665,76 @@ public class Newsfeed extends Activity
         return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
+    public void onClickSearch(View v)
+    {
+
+        LinearLayout newsfeedBar = (LinearLayout) findViewById(R.id.newsfeedBar);
+        LinearLayout searchBar = (LinearLayout) findViewById(R.id.search_bar);
 
 
+        newsfeedBar.setVisibility(View.GONE);
+        searchBar.setVisibility(View.VISIBLE);
+       EditText searchField = (EditText) findViewById(R.id.searchField);
+        searchField.addTextChangedListener(watch);
+        searchField.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+        }
+        arraylist.clear();
+        arraylist.addAll(words);
+        containers.clear();
+        containers.addAll(words);
+    }
+
+    public void onClickCross(View v)
+    {
+        LinearLayout newsfeedBar = (LinearLayout) findViewById(R.id.newsfeedBar);
+        LinearLayout searchBar = (LinearLayout) findViewById(R.id.search_bar);
+
+        newsfeedBar.setVisibility(View.VISIBLE);
+        searchBar.setVisibility(View.GONE);
+
+        words.clear();
+        words.addAll(containers);
+
+        adapter.notifyDataSetChanged();
+    }
+
+
+    TextWatcher watch = new TextWatcher(){
+
+        @Override
+        public void afterTextChanged(Editable arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                      int arg3) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int a, int b, int c) {
+            // TODO Auto-generated method stub
+            String enteredText = String.valueOf(s);
+//            ArrayList<newsfeedPublic> words = new ArrayList<newsfeedPublic>();
+            words.clear();
+            if(enteredText.length()>1) {
+                for (newsfeedPublic wp : arraylist) {
+                    if (wp.getDefaultTranslation().toLowerCase(Locale.getDefault())
+                            .contains(enteredText) || wp.getMiwokTranslation().toLowerCase(Locale.getDefault())
+                            .contains(enteredText) ) {
+                        words.add(wp);
+                    }
+                }
+            }else{
+                words.addAll(arraylist);
+            }
+
+            adapter.notifyDataSetChanged();
+        }};
 }

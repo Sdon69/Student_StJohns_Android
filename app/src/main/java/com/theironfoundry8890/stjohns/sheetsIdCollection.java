@@ -7,7 +7,7 @@ public class sheetsIdCollection extends Activity {
 
 
 
-    public void setSheetIds()
+    public void test()
     {
         String mode = "release";
 
@@ -92,6 +92,18 @@ public class sheetsIdCollection extends Activity {
         }else
         {
             return  "12C3ceqz_Fr7GmXpLxt-n4iMhbr86yluGqT4fno_CW-8";
+        }
+    }
+
+    public static String getTimetableTimestampSheetId()
+    {
+        String mode = "release";
+        if(mode.equals("test")) {
+            return  "1NlH_93dK25MxmrGfsR-0_IHkXUBOeZFlMdeKoE5DKVI";
+
+        }else
+        {
+            return  "13rR9mT24EZURYb0-3ddDmcL6sqXslhbtQPPgDwEMod8";
         }
     }
 

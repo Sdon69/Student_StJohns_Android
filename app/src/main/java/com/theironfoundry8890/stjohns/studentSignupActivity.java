@@ -52,7 +52,7 @@ import java.util.List;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class details extends Activity
+public class studentSignupActivity extends Activity
         implements AdapterView.OnItemSelectedListener , EasyPermissions.PermissionCallbacks {
     GoogleAccountCredential mCredential;
     private Button mCallApiButton;
@@ -69,10 +69,18 @@ public class details extends Activity
     private TextView mOutputText;
     private String sPassword;private String userId;
     private boolean idAvailcheck = true;
-    private String mode = "department";
+    private String mode = "classfeed";
     private boolean dmode = true;
     private  EditText lastNameEditText;
     private String generatedUserId;
+
+    private List<List<Object>>  classResults;
+    private List<List<Object>>  sectionResults;
+    private List<List<Object>>  departmentResults;
+
+    private boolean initialGetMiscData = true;
+
+
 
     private  String classNameString = "a";
     private String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
@@ -102,7 +110,7 @@ public class details extends Activity
 
         sectionName.add("Section");
 
-        setContentView(R.layout.detaillay);
+        setContentView(R.layout.student_signup);
 
         LinearLayout activityLayout = (LinearLayout) findViewById(R.id.mLayout);
 
@@ -135,7 +143,7 @@ public class details extends Activity
         lastNameEditText = (EditText) findViewById(R.id.Student_LName);
         lastNameEditText.addTextChangedListener(watch);
 
-        setDefaults(); //TODO Remove This
+
 
 
         Spinner spin = (Spinner) findViewById(R.id.spinner_department);
@@ -355,7 +363,7 @@ public class details extends Activity
             final int connectionStatusCode) {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         Dialog dialog = apiAvailability.getErrorDialog(
-                details.this,
+                studentSignupActivity.this,
                 connectionStatusCode,
                 REQUEST_GOOGLE_PLAY_SERVICES);
         dialog.show();
@@ -364,38 +372,39 @@ public class details extends Activity
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-        if (mode == "department2") { //TODO Change back to department
+        if (mode == "department") {
             Spinner dept_spin = (Spinner) findViewById(R.id.spinner_department);
             sDepartment = String.valueOf(dept_spin.getSelectedItem());
+            className.clear();
+            className.add("Class");
+            sectionName.clear();
+            sectionName.add("Section");
+            classList();
+            sectionList();
 
-            if (!sDepartment.equals("Department2")) { //TODO Change back to Department
+            if (!sDepartment.equals("Department")) {
                 mode = "classfeed";
                 dept_spin.setEnabled(false);
                 dept_spin.setClickable(false);
-                Button reselectDept = (Button) findViewById(R.id.reselect_dept);
-                reselectDept.setClickable(true);
-                reselectDept.setEnabled(true);
-                reselectDept.setVisibility(view.VISIBLE);
                 className.clear();
                 className.add("Class");
 
 
                 Spinner spin = (Spinner) findViewById(R.id.spinner_class);
                 spin.setOnItemSelectedListener(this);
-                mOutputText.setText("");
-                getResultsFromApi();
+                localGetDataFromApi();
             }
 
 
         }
 
 
-        else if(mode=="classfeed2") // TODO change back to classfeed
+        else if(mode=="classfeed")
         {
-
-
+            sectionName.clear();
+            sectionName.add("Section");
+            sectionList();
             Spinner dept_spin = (Spinner) findViewById(R.id.spinner_class);
-
             sClass = String.valueOf(dept_spin.getSelectedItem());
 
 
@@ -403,9 +412,7 @@ public class details extends Activity
                 mode = "sectionfeed";
                 sectionName.clear();
                 sectionName.add("Section");
-
-                mOutputText.setText("");
-                getResultsFromApi();
+                localGetDataFromApi();
             }
         }
 
@@ -477,6 +484,15 @@ public class details extends Activity
             oRequest.setData(oList);
 
 
+
+
+
+
+
+
+            Log.v("mode",mode);
+
+
             if(mode=="classfeed") {
                  spreadsheetId = "1nzKRlq7cQrI_XiJGxJdNax5oB91bR_SypiazWO2JTuU"; range = "Class Name!".concat("A"+ a++ + ":S");
             }
@@ -492,10 +508,28 @@ public class details extends Activity
 
 
             List<String> results = new ArrayList<String>();
+
+
+
             ValueRange response = this.mService.spreadsheets().values()
                     .get(spreadsheetId, range)
                     .execute();
             List<List<Object>> values = response.getValues();
+
+            if(mode.equals("classfeed")) {
+
+                classResults = response.getValues();
+
+            }
+            else if(mode.equals("sectionfeed")) {
+
+                sectionResults = response.getValues();
+
+
+            }
+            Log.v("responseMode",mode);
+            Log.v("response", String.valueOf(response.getValues()));
+
             if (values != null) {
 
 
@@ -506,9 +540,9 @@ public class details extends Activity
 
                 for (List row : values) {
 
-
-                    if(mode.equals("timestamp"))//TODO Remove timestamp
+                    if(initialGetMiscData)
                         break;
+
 
 
                     if(mode=="classfeed")
@@ -620,25 +654,47 @@ public class details extends Activity
                 mOutputText.setText("No results returned.");
 
             } else {
-                output.add(0, " ");
-                mOutputText.setText(TextUtils.join("\n", output));
 
 
-                if(mode=="classfeed")
+                if(initialGetMiscData)
+                {
+                    if(mode == "classfeed") {
+                        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_department);
+                        departmentSpinner.setSelection(3);
+                        Spinner dept_spin = (Spinner) findViewById(R.id.spinner_department);
+                        sDepartment = String.valueOf(dept_spin.getSelectedItem());
+                        className.clear();
+                        className.add("Class");
+                        mode="classfeed";
+                        localGetDataFromApi();
+                        Spinner classSpinner = (Spinner) findViewById(R.id.spinner_class);
+                        classSpinner.setSelection(1);
+                        mode = "sectionfeed";
+                        getResultsFromApi();
+
+                    }
+                    else if(mode=="sectionfeed")
+                    {
+
+
+                        loadEmailId();
+                        setDefaults();
+                        mode = "department";
+                        initialGetMiscData  = false;
+                    }
+                }
+                else if(mode=="classfeed")
                 {
                     classList();
                 }
 
-                if(mode=="sectionfeed")
+                else if(mode=="sectionfeed")
                 {
 
                     sectionList();
                 }
-                if(mode=="Submit") {
+                else if(mode=="Submit") {
                     displayAvailability();
-                }else if (mode.equals("timestamp"))
-                {
-                    loadEmailId();
                 }
             }
         }
@@ -656,30 +712,37 @@ public class details extends Activity
                 } else if (mLastError instanceof UserRecoverableAuthIOException) {
                     startActivityForResult(
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            details.REQUEST_AUTHORIZATION);
+                            studentSignupActivity.REQUEST_AUTHORIZATION);
                 } else {
-                    mOutputText.setText("The following error occurred:\n"
-                            + mLastError.getMessage());
 
 
-                    if(mode=="classfeed")
+                    if(initialGetMiscData)
                     {
+                        if(mode == "classfeed") {
+                            mode = "sectionfeed";
+                            getResultsFromApi();
+                        }
+                        else if(mode=="sectionfeed")
+                        {
 
+                            initialGetMiscData  = false;
+                            mode = "department";
+                            loadEmailId();
+                        }
+                    }
+                    else if(mode=="classfeed")
+                    {
                         classList();
                     }
 
-                    if(mode=="sectionfeed")
+                    else if(mode=="sectionfeed")
                     {
 
                         sectionList();
                     }
-                    if(mode=="Submit") {
+                    else if(mode=="Submit") {
                         displayAvailability();
-                    }else if (mode.equals("timestamp"))
-                    {
-                        loadEmailId();
                     }
-
                 }
             } else {
                 mOutputText.setText("Request cancelled.");
@@ -706,6 +769,19 @@ public class details extends Activity
 
 
     }
+
+    public void onClickGuestLogin(View v)
+    {
+        SharedPreferences mPrefs = getSharedPreferences("label", 0);
+        SharedPreferences.Editor mEditor = mPrefs.edit();
+        mEditor.putBoolean("isGuestLogin", true).apply();
+        mEditor.putBoolean("firstUse", false).apply();
+//        mEditor.putString("classResults", String.valueOf(classResults)).apply();
+//        mEditor.putString("sectionResults", String.valueOf(sectionResults)).apply();
+        Intent selectIntent = new Intent(studentSignupActivity.this,Newsfeed.class);
+        startActivity(selectIntent);
+    }
+
 
     public static List<List<Object>> getData (String id , String pass, String firstName ,
                                               String lastName , String sClasse ,String Section, String
@@ -891,6 +967,7 @@ public class details extends Activity
     {
 
 
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_spinner_item, className);
 
@@ -925,18 +1002,15 @@ public class details extends Activity
         Spinner dept_spin = (Spinner) findViewById(R.id.spinner_department);
         dept_spin.setEnabled(true);
         dept_spin.setClickable(true);
-        Button reselectDept = (Button) findViewById(R.id.reselect_dept);
-        reselectDept.setClickable(false);
-        reselectDept.setEnabled(false);
-        reselectDept.setVisibility(View.INVISIBLE);
         mode = "department";
         Spinner spin = (Spinner) findViewById(R.id.spinner_department);
+        spin.performClick();
         spin.setOnItemSelectedListener(this);
     }
 
     public void onClickSignin (View v) {
 
-        Intent selectIntent = new Intent(details.this,signin.class);
+        Intent selectIntent = new Intent(studentSignupActivity.this,signin.class);
         startActivity(selectIntent);
 
 
@@ -959,7 +1033,7 @@ public class details extends Activity
         mEditor.putString("LastName", sLName).apply();
 
         //Section
-        mEditor.putString("Section", sSection).apply();
+            mEditor.putString("Section", sSection).apply();
 
         //Class
         mEditor.putString("Class", sClass).apply();
@@ -984,7 +1058,7 @@ public class details extends Activity
 
 
 
-        Intent selectIntent = new Intent(details.this,Newsfeed.class);
+        Intent selectIntent = new Intent(studentSignupActivity.this,Newsfeed.class);
         startActivity(selectIntent);
     }
 
@@ -1046,16 +1120,16 @@ public class details extends Activity
 
     public void setDefaults()
     {
-        Spinner departmentSpinner = (Spinner) findViewById(R.id.spinner_department);
-        departmentSpinner.setSelection(3);
 
-        Spinner classSpinner = (Spinner) findViewById(R.id.spinner_class);
-        classSpinner.setSelection(1);
 
-        Spinner sectionSpinner = (Spinner) findViewById(R.id.spinner_section);
-        sectionSpinner.setSelection(1);
 
-        mode = "timestamp";
+
+
+
+        mode = "sectionfeed";
+        localGetDataFromApi();
+
+
 
     }
 
@@ -1072,5 +1146,80 @@ public class details extends Activity
 
 
     }
+
+
+
+    public void localGetDataFromApi() {
+        List<List<Object>> values;
+
+        if (mode == "classfeed") {
+            values = classResults;
+        }else if(mode == "sectionfeed")
+        {
+            values = sectionResults;
+
+        }else
+        {
+            values = sectionResults;
+        }
+
+        Log.v("localGetDataFromApiMOde", String.valueOf(values));
+
+        if (values != null) {
+            for (List row : values) {
+                if (mode == "classfeed") {
+
+                    String dept = String.valueOf(row.get(1));
+
+
+                    if (dept.equals(sDepartment))
+                    {
+
+                        String retrievedClass = String.valueOf(row.get(0));
+                        Log.v("retreievedClass", retrievedClass);
+                        className.add(String.valueOf(row.get(0)));
+
+
+                    }
+                }
+
+                if (mode == "sectionfeed") {
+                    String dept = String.valueOf(row.get(1));
+                    Log.v("deptSection",dept);
+
+                    Spinner classSpinner = (Spinner) findViewById(R.id.spinner_class);
+                    sClass = String.valueOf(classSpinner.getSelectedItem());
+                    if (sClass.equals(dept))
+                    {
+
+                        sectionName.add(String.valueOf(row.get(0)));
+
+                    }
+                }
+            }
+        }
+
+        if(mode=="classfeed")
+        {
+            classList();
+        }
+
+        else if(mode=="sectionfeed")
+        {
+
+            sectionList();
+            if(initialGetMiscData)
+            {
+
+                Spinner dept_spin = (Spinner) findViewById(R.id.spinner_class);
+                sClass = String.valueOf(dept_spin.getSelectedItem());
+                Spinner sectionSpinner = (Spinner) findViewById(R.id.spinner_section);
+                sectionSpinner.setSelection(1);
+
+            }
+        }
+    }
+
+
 
 }

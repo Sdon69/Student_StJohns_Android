@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="220dp"
+    android:layout_height="120dp"
+    android:background="@drawable/border"
+    >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/question"
+        android:layout_centerVertical="true"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="6dp"
+        android:padding="6dp"
+        android:text="What's Your Department?"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+
+    <Spinner
+        android:id="@+id/spinner_department"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:entries="@array/dept_arrays2"
+        android:prompt="@string/country_prompt"
+        android:layout_below="@+id/question"
+
+
+        android:layout_above="@+id/textView" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:onClick="onClickOk"
+        android:padding="12dp"
+        android:text="OK"
+        android:textColor="@color/colorAccent"
+        android:id="@+id/textView" />
+
+</RelativeLayout>
