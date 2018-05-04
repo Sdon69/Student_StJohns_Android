@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -60,7 +61,6 @@ public class signin extends Activity
     private TextView mOutputText;
     private String sPassword;private String userId;
 
-    private boolean idAvailcheck = true;
     private boolean idCheck = true;
     private boolean passCheck = true;
     private boolean sVirginity = true;
@@ -395,7 +395,7 @@ public class signin extends Activity
         private List<String> getDataFromApi() throws IOException {
             String spreadsheetId = "1qtzLH2JKOURnvIrc3Q-mlCfQLHtfNbUmZnAiRGJWHBM";
             int a = 2;
-            idAvailcheck = true;
+
             idCheck = false;
             passCheck = false;
             String range = "Class Data!".concat("A"+ a++ + ":J");
@@ -456,8 +456,11 @@ public class signin extends Activity
                         break;
                     }
 
-
-                    if (dId.contains(sId))
+                    String retrievedPhoneNo = String.valueOf(row.get(6));
+                    String retrievedEmailId = String.valueOf(row.get(7));
+                    Log.v("retrievedPhoneNo",retrievedPhoneNo);
+                    Log.v("retrievedEmailId",retrievedEmailId);
+                    if (dId.equals(sId) || retrievedPhoneNo.equals(sId)  || retrievedEmailId.equals(sId))
                     {
 
                         idCheck = true;
@@ -467,7 +470,7 @@ public class signin extends Activity
                         if(dPassword.equals(sPassword)) {
 
 
-                            idAvailcheck = false;
+
                             passCheck = true;
                             dFName = String.valueOf(dRow.get(2));
                             dLName = String.valueOf(dRow.get(3));
