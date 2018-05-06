@@ -55,6 +55,8 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.google.firebase.messaging.FirebaseMessaging;
+
+import com.theironfoundry8890.stjohns.youtubeDataUploader.Constants;
 import com.theironfoundry8890.stjohns.youtubeDataUploader.PlayActivity;
 
 
@@ -72,6 +74,7 @@ import java.util.TimerTask;
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
+import static com.theironfoundry8890.gradlestuff.Constants.Type.stJohnsAgra;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getAnnouncementSheetId;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getEventSheetId;
 import static com.theironfoundry8890.stjohns.sheetsIdCollection.getMiscSheetId;
@@ -240,6 +243,15 @@ public class Newsfeed extends Activity
             mProgress.setCanceledOnTouchOutside(false);
 
             setContentView(activityLayout);
+
+            if(com.theironfoundry8890.gradlestuff.Constants.type == com.theironfoundry8890.gradlestuff.Constants.Type.mpsAgra)
+            {
+                Log.v("college","mpsAgra");
+            }
+            else if(com.theironfoundry8890.gradlestuff.Constants.type == com.theironfoundry8890.gradlestuff.Constants.Type.stJohnsAgra)
+            {
+                Log.v("college","stJohnsAgra");
+            }
 
             try {
                 PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);

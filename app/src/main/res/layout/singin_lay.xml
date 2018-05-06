@@ -55,8 +55,8 @@
                     android:id="@+id/sign_User_id"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="User id"
-                    android:maxLength="20"
+                    android:hint="User id , Email or Phone"
+                    android:maxLength="100"
                     android:textColorHint="#c0cce0"
                     android:textStyle="bold" />
 
